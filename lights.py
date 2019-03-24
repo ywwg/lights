@@ -3,6 +3,7 @@ from  BaseHTTPServer import BaseHTTPRequestHandler
 import SimpleHTTPServer
 import SocketServer
 import sys
+import time
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
 
@@ -14,6 +15,9 @@ PORT = 8000
 
 # the get handler will need to take in params and then make calls to flux as
 # needed
+
+class BulbNotFoundError(Exception):
+  pass
 
 class Flux(object):
   def __init__(self):
@@ -43,12 +47,18 @@ class Flux(object):
       b.turnOn() if on else b.turnOff()
 
   def set_all(self, r, g, b, w, brightness=None):
-    for name, bulb in self._bulbs():
-      # The kitchen lights have r and g swapped, so flip them
-      set_r, set_g = r, g
-      if name == 'kitchen':
-        set_r, set_g = g, r
-      bulb.setRgbw(set_r, set_g, b, w, brightness=brightness)
+    for name in self._lights:
+      self.set_one(name, r, g, b, w, brightness)
+
+  def set_one(self, name, r, g, b, w, brightness=None):
+    if name not in self._lights:
+      raise BulbNotFoundError
+    
+    # The kitchen lights have r and g swapped, so flip them
+    if name == 'kitchen':
+      r, g = g, r
+    
+    self._lights[name]['bulb'].setRgbw(r, g, b, w, brightness=brightness)
 
   def refresh_state(self):
     for _, bulb in self._bulbs():
@@ -70,8 +80,12 @@ class Flux(object):
 
 if __name__ == '__main__':
   flux = Flux()
-  # flux.set_power(True)
-  # flux.set_all(0x00, 0x00, 0x00, 0xff)
+  flux.set_power(True)
+  flux.set_all(0xff, 0x00, 0xff, 0x00)
+  flux.refresh_state()
+  time.sleep(1)
+  flux.set_power(False)
+  time.sleep(1)
   # flux.set_power(False)
   # handler = LightsHTTPRequestHandler
   # httpd = SocketServer.TCPServer(("", PORT), handler)
