@@ -1,13 +1,24 @@
 #!/usr/bin/python2.7
-from  BaseHTTPServer import BaseHTTPRequestHandler
+import BaseHTTPServer
+import cgi
+import json
+import mimetypes
+import os
+import posixpath
+import shutil
 import SimpleHTTPServer
 import SocketServer
 import sys
+import threading
 import time
+import urllib
+import urlparse
+try:
+    from cStringIO import StringIO
+except ImportError:
+  from StringIO import StringIO
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
-
-PORT = 8000
 
 # We need a wrapper class for the kitchen lights where R and G are swapped
 # We need some sort of html/css for the main display, should do a mockup first.
@@ -19,21 +30,28 @@ PORT = 8000
 class BulbNotFoundError(Exception):
   pass
 
-class Flux(object):
-  def __init__(self):
-    scanner = BulbScanner()
-    scanner.scan(timeout=4)
-
+class Lights(object):
+  def __init__(self, fake=False):
     self._lights = {}
-    self._lights['couch'] = {'info': scanner.getBulbInfoByID('A020A60EB2B6')}
-    self._lights['kitchen'] = {'info': scanner.getBulbInfoByID('840D8E5C69AE')}
+    if not fake:
+      scanner = BulbScanner()
+      scanner.scan(timeout=4)
+
+      self._lights['couch'] = {'info': scanner.getBulbInfoByID('A020A60EB2B6')}
+      self._lights['kitchen'] = {'info': scanner.getBulbInfoByID('840D8E5C69AE')}
+    else:
+      self._lights['couch'] = {'info': {'ipaddr': '10.0.0.1'}}
+      self._lights['kitchen'] = {'info': {'ipaddr': '10.0.0.2'}}
 
     for name, l in self._lights.iteritems():
       if not l['info']:
         print ('Did not find expected bulb', name)
         sys.exit(1)
       print 'Found bulb: ', name
-      l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
+      if not fake:
+        l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
+      else:
+        l['bulb'] = FakeBulb()
 
   def _bulbs(self):
     return [(name, l['bulb']) for name, l in self._lights.iteritems()]
@@ -41,16 +59,17 @@ class Flux(object):
   def list_bulbs(self):
     return [name for name in self._lights]
 
-  def set_power(self, on=True):
-    """If true, turn on. If false, turn off"""
-    for _, b in self._bulbs():
-      b.turnOn() if on else b.turnOff()
+  def set_power(self, name, on=True):
+    if name not in self._lights:
+      return BulbNotFoundError
+    b = self._lights[name]['bulb']
+    b.turnOn() if on else b.turnOff()
 
-  def set_all(self, r, g, b, w, brightness=None):
+  def set_rgbw_all(self, r, g, b, w, brightness=None):
     for name in self._lights:
-      self.set_one(name, r, g, b, w, brightness)
+      self.set_rgbw_one(name, r, g, b, w, brightness)
 
-  def set_one(self, name, r, g, b, w, brightness=None):
+  def set_rgbw_one(self, name, r, g, b, w, brightness=None):
     if name not in self._lights:
       raise BulbNotFoundError
     
@@ -64,30 +83,185 @@ class Flux(object):
     for _, bulb in self._bulbs():
       bulb.refreshState()
 
+class FakeBulb(object):
+  def turnOn(self):
+    print "light goes on"
+  
+  def turnOff(self):
+    print "light goes off"
 
-# class LightsHTTPRequestHandler(BaseHTTPRequestHandler):
-  
-#   def __init__(self, flux):
-#     """flux is the handler that can be called to set brightnesses"""
-#     self._flux = flux
-#     # self._lights = an array of the available detected bulbs (get from flux)
-  
-#   def do_GET(self):
-#     # 
-#     self.send_response(200)
-#     self.end_headers()
-#     self.wfile.write(b'Hello, world!')
+  def setRgbw(self, r, g, b, w, brightness):
+    print "set rgbw", r, g, b, w, brightness
+
+  def refreshState(self):
+    print "refreshing state I guess"
+
+# usually we will serve files as requested, but if they ask for one of
+# our specially-handled paths then we call flux, etc.
+
+# Most of the code is ripped from SimpleHTTPRequestHandler
+class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+  server_version = "Lights/1.0"
+
+  def do_GET(self):
+    print "PATH???", self.path
+
+    req = self.path.split('?',1)[0]
+    req = req.split('#',1)[0]
+    req = posixpath.normpath(urllib.unquote(req))
+    req = req.split('/')[-1]
+
+    # Our custom handlers
+    if req == 'list_lights':
+      print 'listing lights'
+      return self.ListLights()
+    elif req == 'set_lights':
+      print 'setting lights:', self.path
+      return self.SetLights(self.path)
+
+    f = self._send_head()
+    if f:
+      shutil.copyfileobj(f, self.wfile)
+      f.close()
+
+  def ListLights(self):
+    with FluxHandlerLock:
+      lights = FluxHandler.list_bulbs()
+    self._send_as_json(lights)
+
+  def SetLights(self, path):
+    # path format: /set_lights?bulb=[name]&power=[on/off]&rgbw=AABBCCDD
+    url = urlparse.urlparse(path)
+    query = urlparse.parse_qs(url.query)
+    # TODO: like, at least a *little* input validation
+    print 'query:', query
+    with FluxHandlerLock:
+      bulbs = []
+      if query['bulb'][0] == 'all':
+        bulbs = FluxHandler.list_bulbs()
+      else:
+        bulbs = [b.strip() for b in query['bulb'][0].split(',')]
+      for bulb in bulbs:
+        if 'power' in query:
+          FluxHandler.set_power(bulb, True if query['power'][0] == 'on' else False)
+        if 'rgbw' in query:
+          r = query['rgbw'][0][0:2]
+          g = query['rgbw'][0][2:4]
+          b = query['rgbw'][0][4:6]
+          w = query['rgbw'][0][6:8]
+          FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+
+    self._send_as_json(True)
+
+  def do_HEAD(self):
+    f = self._send_head()
+    if f:
+      f.close()
+
+  def _send_as_json(self, pyob):
+    """Encodes the passed-in python object as json and writes it out."""
+    jsonob = json.dumps(pyob)
+    self.send_response(200)
+    self.send_header("Content-type", "application/json")
+    self.send_header("Content-Length", len(jsonob))
+    # self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+    self.end_headers()
+    self.wfile.write(jsonob)
+
+  def _send_head(self):
+    path = self._translate_path(self.path)
+    f = None
+    if os.path.isdir(path):
+      if not self.path.endswith('/'):
+        # redirect browser - doing basically what apache does
+        self.send_response(301)
+        self.send_header("Location", self.path + "/")
+        self.end_headers()
+        return None
+      for index in "index.html", "index.htm":
+        index = os.path.join(path, index)
+        if os.path.exists(index):
+          path = index
+          break
+      else:
+        # don't bother handling directory requests
+        return None
+    ctype = self._guess_type(path)
+    try:
+      # Always read in binary mode. Opening files in text mode may cause
+      # newline translations, making the actual size of the content
+      # transmitted *less* than the content-length!
+      f = open(path, 'rb')
+    except IOError:
+      self.send_error(404, "File not found")
+      return None
+    self.send_response(200)
+    self.send_header("Content-type", ctype)
+    fs = os.fstat(f.fileno())
+    self.send_header("Content-Length", str(fs[6]))
+    self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+    self.end_headers()
+    return f
+
+  def _translate_path(self, path):
+    """Translate a /-separated PATH to the local filename syntax.
+    Add on /templates for this server.
+    Components that mean special things to the local file system
+    (e.g. drive or directory names) are ignored.  (XXX They should
+    probably be diagnosed.)
+    """
+    # abandon query parameters
+    path = path.split('?',1)[0]
+    path = path.split('#',1)[0]
+    path = posixpath.normpath(urllib.unquote(path))
+    words = path.split('/')
+    words = filter(None, words)
+    path = os.path.join(os.getcwd(), 'templates')
+    for word in words:
+      drive, word = os.path.splitdrive(word)
+      head, word = os.path.split(word)
+      if word in (os.curdir, os.pardir): continue
+      path = os.path.join(path, word)
+    return path
+
+  def _guess_type(self, path):
+    base, ext = posixpath.splitext(path)
+    if ext in self.extensions_map:
+      return self.extensions_map[ext]
+    ext = ext.lower()
+    if ext in self.extensions_map:
+      return self.extensions_map[ext]
+    else:
+      return self.extensions_map['']
+
+  if not mimetypes.inited:
+    mimetypes.init() # try to read system mime.types
+  extensions_map = mimetypes.types_map.copy()
+  extensions_map.update({
+    '': 'application/octet-stream', # Default
+    '.py': 'text/plain',
+    '.c': 'text/plain',
+    '.h': 'text/plain',
+  })
+
+FluxHandler = None
+FluxHandlerLock = threading.Lock()
 
 if __name__ == '__main__':
-  flux = Flux()
-  flux.set_power(True)
-  flux.set_all(0xff, 0x00, 0xff, 0x00)
-  flux.refresh_state()
-  time.sleep(1)
-  flux.set_power(False)
-  time.sleep(1)
-  # flux.set_power(False)
-  # handler = LightsHTTPRequestHandler
-  # httpd = SocketServer.TCPServer(("", PORT), handler)
-  # print "serving at port", PORT
-  # httpd.serve_forever()
+  # lights = Lights()
+  # lights.set_power(True)
+  # lights.set_rgbw_all(0xff, 0x00, 0xff, 0x00)
+  # lights.refresh_state()
+  # time.sleep(1)
+  # lights.set_power(False)
+  # time.sleep(1)
+
+  port = int(sys.argv[1])
+
+  FluxHandler = Lights(True)
+  
+  handler = LightsHTTPRequestHandler
+  httpd = SocketServer.TCPServer(("", port), handler)
+  print "serving at port", port
+  httpd.serve_forever()
