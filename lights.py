@@ -264,7 +264,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
   def _translate_path(self, path):
     """Translate a /-separated PATH to the local filename syntax.
-    Add on /templates for this server.
+    Add on /html for this server.
     Components that mean special things to the local file system
     (e.g. drive or directory names) are ignored.  (XXX They should
     probably be diagnosed.)
@@ -277,7 +277,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     words = filter(None, words)
 
     # XXXXXX custom hack here:
-    path = os.path.join(os.getcwd(), 'templates')
+    path = os.path.join(os.getcwd(), 'html')
     for word in words:
       drive, word = os.path.splitdrive(word)
       head, word = os.path.split(word)

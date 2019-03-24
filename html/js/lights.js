@@ -31,24 +31,23 @@ function load_presets() {
 }
 
 function onColorInputStart(color) {
-  mode = document.getElementById('modeSelect').value
+  mode = $('#modeSelect input:radio:checked').val();
 
   // If the selected color has any s, then set mode to color.
   hsl = color.hsl
   if (mode === 'white' && hsl.s !== 0) {
-    // Change mode to color
-    $('#modeSelect').val('color');
+    $('#mode-color').click();
   }
 }
 
 function onColorChange(color, changes) {
   // print the color's new hex value to the developer console
-  bulb = document.getElementById('lightSelect').value
+  bulb = $('#lightSelect').val();
   if (bulb === '') {
     return;
   }
 
-  mode = document.getElementById('modeSelect').value
+  mode = $('#modeSelect input:radio:checked').val();
 
   if (mode === 'color') {
     color = color.hexString.substring(1);
@@ -94,7 +93,8 @@ function load_values() {
   colorPicker.on('color:change', onColorChange);
   colorPicker.on('input:start', onColorInputStart);
   $('#modeSelect').change(function(ob) {
-    mode = document.getElementById('modeSelect').value
+    mode = $('#modeSelect input:radio:checked').val();
+    console.log(mode);
     if (mode === "white") {
       // Reset the colorpicker to 0% sat for whites.
       curcolor = colorPicker.color.hsl;
