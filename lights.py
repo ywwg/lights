@@ -34,16 +34,26 @@ from flux_led import WifiLedBulb, BulbScanner, LedTimer
 class BulbNotFoundError(Exception):
   pass
 
+BULBS = {
+  'A020A60EB2B6': 'couch',
+  '840D8E5C69AE': 'kitchen',
+}
+
 # presets:
-#  name => dict:
-#   name of bulb => RGBW
+#  name => tuple:
+#   sort order, dict:
+#    name of bulb => RGBW
 PRESETS = {
-  '100': {'all': '000000FF'},
-  '50': {'all': '00000088'},
-  '20': {'all': '00000022'},
-  'blue': {'kitchen': '0000FF00',
-           'couch': '0000DD00'},
-} 
+  '100': (0, {'all': '000000FF'}),
+  '50': (1, {'all': '00000088'}),
+  '20': (2, {'all': '00000022'}),
+  'tv med': (3, {'kitchen': '00000066',
+             'couch': '00000044'}),
+  'tv low': (4, {'kitchen': '00000011',
+             'couch': '00000022'}),
+  'blue': (5, {'all': '0000FF00'}),
+  'purple': (6, {'all': 'FF00FF00'}),
+}
 
 class Lights(object):
   def __init__(self, fake=False):
@@ -52,17 +62,20 @@ class Lights(object):
       scanner = BulbScanner()
       scanner.scan(timeout=4)
 
-      self._lights['couch'] = {'info': scanner.getBulbInfoByID('A020A60EB2B6')}
-      self._lights['kitchen'] = {'info': scanner.getBulbInfoByID('840D8E5C69AE')}
+      for scanned in scanner.getBulbInfo():
+        bid = scanned['id']
+        if bid in BULBS:
+          print 'Found real bulb: %s' % (BULBS[bid],)
+          self._lights[BULBS[bid]] = {'info': scanned}
     else:
-      self._lights['couch'] = {'info': {'ipaddr': '10.0.0.1'}}
-      self._lights['kitchen'] = {'info': {'ipaddr': '10.0.0.2'}}
+      for i, id in enumerate(BULBS):
+        print 'Found fake bulb: %s' % (BULBS[id],)
+        self._lights[BULBS[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
 
     for name, l in self._lights.iteritems():
       if not l['info']:
         print ('Did not find expected bulb', name)
         sys.exit(1)
-      print 'Found bulb: ', name
       if not fake:
         l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
       else:
@@ -89,12 +102,13 @@ class Lights(object):
   def set_rgbw_one(self, name, r, g, b, w, brightness=None):
     if name not in self._lights:
       raise BulbNotFoundError
-    
+
     # The kitchen lights have r and g swapped, so flip them
     if name == 'kitchen':
       r, g = g, r
-    
-    self._lights[name]['bulb'].setRgbw(r, g, b, w, brightness=brightness)
+
+    self._lights[name]['bulb'].setRgbw(r, g, b, w,
+        brightness=brightness, retry=3)
 
   def refresh_state(self):
     for _, bulb in self._bulbs():
@@ -103,12 +117,12 @@ class Lights(object):
 class FakeBulb(object):
   def turnOn(self):
     print "light goes on"
-  
+
   def turnOff(self):
     print "light goes off"
 
-  def setRgbw(self, r, g, b, w, brightness):
-    print "set rgbw", r, g, b, w, brightness
+  def setRgbw(self, r, g, b, w, brightness=0, retry=2):
+    print "set rgbw", r, g, b, w, brightness, retry
 
   def refreshState(self):
     print "refreshing state I guess"
@@ -136,10 +150,8 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     elif req == 'list_presets':
       return self.ListPresets()
     elif req == 'activate_preset':
-      print "activate preset!", self.path
       return self.ActivatePreset(self.path)
     elif req == 'set_lights':
-      print 'setting lights:', self.path
       return self.SetLights(self.path)
 
     f = self._send_head()
@@ -153,8 +165,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self._send_as_json(lights)
 
   def ListPresets(self):
-    preset_names = PRESETS.keys()
-    # need to figure out sorting.
+    preset_names = sorted(PRESETS.keys(), key=lambda x: PRESETS[x][0])
     self._send_as_json(preset_names)
 
   def ActivatePreset(self, path):
@@ -163,9 +174,9 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     print "query:", query
     if 'name' not in query:
       return self._send_as_json(False)
-    
+
     with FluxHandlerLock:
-      preset = PRESETS[query['name'][0]]
+      preset = PRESETS[query['name'][0]][1]
       # The preset is dict
       for bulb, val in preset.iteritems():
         r = int(val[0:2], 16)
@@ -199,7 +210,6 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
           b = int(query['rgbw'][0][4:6], 16)
           w = int(query['rgbw'][0][6:8], 16)
           FluxHandler.set_rgbw_one(bulb, r, g, b, w)
-
     self._send_as_json(True)
 
   def do_HEAD(self):
@@ -308,8 +318,12 @@ if __name__ == '__main__':
   # time.sleep(1)
 
   port = int(sys.argv[1])
+  fake = False
+  if len(sys.argv) > 2:
+    if sys.argv[2] == 'fake':
+      fake = True
 
-  FluxHandler = Lights()
+  FluxHandler = Lights(fake=fake)
   handler = LightsHTTPRequestHandler
   httpd = SocketServer.TCPServer(("", port), handler)
   print "serving at port", port
