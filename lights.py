@@ -30,6 +30,17 @@ from flux_led import WifiLedBulb, BulbScanner, LedTimer
 class BulbNotFoundError(Exception):
   pass
 
+# presets:
+#  name => dict:
+#   name of bulb => RGBW
+PRESETS = {
+  '100': {'all': '000000FF'},
+  '50': {'all': '00000088'},
+  '20': {'all': '00000022'},
+  'blue': {'kitchen': '0000FF00',
+           'couch': '0000DD00'},
+} 
+
 class Lights(object):
   def __init__(self, fake=False):
     self._lights = {}
@@ -114,8 +125,12 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     # Our custom handlers
     if req == 'list_lights':
-      print 'listing lights'
       return self.ListLights()
+    elif req == 'list_presets':
+      return self.ListPresets()
+    elif req == 'activate_preset':
+      print "activate preset!", self.path
+      return self.ActivatePreset(self.path)
     elif req == 'set_lights':
       print 'setting lights:', self.path
       return self.SetLights(self.path)
@@ -129,6 +144,32 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     with FluxHandlerLock:
       lights = FluxHandler.list_bulbs()
     self._send_as_json(lights)
+
+  def ListPresets(self):
+    preset_names = PRESETS.keys()
+    # need to figure out sorting.
+    self._send_as_json(preset_names)
+
+  def ActivatePreset(self, path):
+    url = urlparse.urlparse(path)
+    query = urlparse.parse_qs(url.query)
+    print "query:", query
+    if 'name' not in query:
+      return self._send_as_json(False)
+    
+    with FluxHandlerLock:
+      preset = PRESETS[query['name'][0]]
+      # The preset is dict
+      for bulb, val in preset.iteritems():
+        r = val[0:2]
+        g = val[2:4]
+        b = val[4:6]
+        w = val[6:8]
+        if bulb == 'all':
+          FluxHandler.set_rgbw_all(r, g, b, w)
+        else:
+          FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+    return self._send_as_json(True)
 
   def SetLights(self, path):
     # path format: /set_lights?bulb=[name]&power=[on/off]&rgbw=AABBCCDD
@@ -217,6 +258,8 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     path = posixpath.normpath(urllib.unquote(path))
     words = path.split('/')
     words = filter(None, words)
+
+    # XXXXXX custom hack here:
     path = os.path.join(os.getcwd(), 'templates')
     for word in words:
       drive, word = os.path.splitdrive(word)
@@ -260,7 +303,6 @@ if __name__ == '__main__':
   port = int(sys.argv[1])
 
   FluxHandler = Lights(True)
-  
   handler = LightsHTTPRequestHandler
   httpd = SocketServer.TCPServer(("", port), handler)
   print "serving at port", port
