@@ -76,8 +76,10 @@ class Lights(object):
 
   def set_power(self, name, on=True):
     if name not in self._lights:
+      print "bulb not found:", name
       return BulbNotFoundError
     b = self._lights[name]['bulb']
+    print "setting bulb power:", name, on
     b.turnOn() if on else b.turnOff()
 
   def set_rgbw_all(self, r, g, b, w, brightness=None):
@@ -166,10 +168,10 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       preset = PRESETS[query['name'][0]]
       # The preset is dict
       for bulb, val in preset.iteritems():
-        r = val[0:2]
-        g = val[2:4]
-        b = val[4:6]
-        w = val[6:8]
+        r = int(val[0:2], 16)
+        g = int(val[2:4], 16)
+        b = int(val[4:6], 16)
+        w = int(val[6:8], 16)
         if bulb == 'all':
           FluxHandler.set_rgbw_all(r, g, b, w)
         else:
@@ -192,10 +194,10 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if 'power' in query:
           FluxHandler.set_power(bulb, True if query['power'][0] == 'on' else False)
         if 'rgbw' in query:
-          r = query['rgbw'][0][0:2]
-          g = query['rgbw'][0][2:4]
-          b = query['rgbw'][0][4:6]
-          w = query['rgbw'][0][6:8]
+          r = int(query['rgbw'][0][0:2], 16)
+          g = int(query['rgbw'][0][2:4], 16)
+          b = int(query['rgbw'][0][4:6], 16)
+          w = int(query['rgbw'][0][6:8], 16)
           FluxHandler.set_rgbw_one(bulb, r, g, b, w)
 
     self._send_as_json(True)
@@ -307,7 +309,7 @@ if __name__ == '__main__':
 
   port = int(sys.argv[1])
 
-  FluxHandler = Lights(fake=True)
+  FluxHandler = Lights()
   handler = LightsHTTPRequestHandler
   httpd = SocketServer.TCPServer(("", port), handler)
   print "serving at port", port
