@@ -45,7 +45,7 @@ function load_presets() {
       for (var i = 0; i < presets.length; i++) {
         $('#preset-list')
           .append(
-              '<button type="button" class="btn btn-secondary" name="button"' +
+              '<button type="button" class="btn btn-primary" name="button"' +
               'onclick="activate_preset(&quot;' + presets[i] + '&quot;)">' + 
               presets[i] + '</button>');
       }
@@ -62,5 +62,16 @@ function activate_preset(name) {
   $.ajax({
     type: 'GET',
     url: '/activate_preset?name=' + name,
+  })
+}
+
+function set_power(onoff) {
+  bulb = document.getElementById('lightSelect').value
+  if (bulb === '') {
+    return;
+  }
+  $.ajax({
+    type: 'GET',
+    url: '/set_lights?bulb=' + bulb + '&power=' + onoff,
   })
 }

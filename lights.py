@@ -20,12 +20,10 @@ except ImportError:
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
 
-# We need a wrapper class for the kitchen lights where R and G are swapped
-# We need some sort of html/css for the main display, should do a mockup first.
-# Maybe the initial design is on/off, and white brightness
 
-# the get handler will need to take in params and then make calls to flux as
-# needed
+# STATUS:
+# OK, the basics are coming together.  Even if we just have presets and on/off,
+# that's a good start.
 
 class BulbNotFoundError(Exception):
   pass
@@ -107,8 +105,6 @@ class FakeBulb(object):
   def refreshState(self):
     print "refreshing state I guess"
 
-# usually we will serve files as requested, but if they ask for one of
-# our specially-handled paths then we call flux, etc.
 
 # Most of the code is ripped from SimpleHTTPRequestHandler
 class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -116,7 +112,10 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   server_version = "Lights/1.0"
 
   def do_GET(self):
-    print "PATH???", self.path
+    # usually we will serve files as requested, but if they ask for one of
+    # our specially-handled paths then we call flux, etc.
+
+    print "requested path:", self.path
 
     req = self.path.split('?',1)[0]
     req = req.split('#',1)[0]
@@ -302,7 +301,7 @@ if __name__ == '__main__':
 
   port = int(sys.argv[1])
 
-  FluxHandler = Lights(True)
+  FluxHandler = Lights(fake=True)
   handler = LightsHTTPRequestHandler
   httpd = SocketServer.TCPServer(("", port), handler)
   print "serving at port", port
