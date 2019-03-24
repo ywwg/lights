@@ -13,12 +13,12 @@
   <link href="css/bootstrap-dark.min.css" rel="stylesheet">
   <link href="css/lights.css" rel="stylesheet">
 </head>
-<body onload="load_values()">
+<body onload="init()">
   <div class="container">
     <div class="d-flex justify-content-center mb-3">
       <div id="color-picker-container"></div>
     </div>
-    <div class="d-flex justify-content-center  mb-3">
+    <div class="d-flex justify-content-center mb-3">
       <div class="btn-group btn-group-toggle" data-toggle="buttons" id="modeSelect">
         <label class="btn btn-secondary active">
           <input type="radio" name="options" id="mode-color" value="color" autocomplete="off" checked>Full Color
@@ -27,7 +27,6 @@
           <input type="radio" name="options" id="mode-white" value="white" autocomplete="off">Warm White
         </label>
       </div>
-
     </div>
     <div class="d-flex justify-content-center custom">
       <div class="input-group w-75 mb-3">
