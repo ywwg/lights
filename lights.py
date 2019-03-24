@@ -24,6 +24,12 @@ from flux_led import WifiLedBulb, BulbScanner, LedTimer
 # STATUS:
 # OK, the basics are coming together.  Even if we just have presets and on/off,
 # that's a good start.
+#
+# The big next thing is getting the color wheel selector working, and adding
+# a slider for the custom colors.
+#
+# After that, creating presets would be nice but maybe it's just easier to
+# edit the file, y'know.
 
 class BulbNotFoundError(Exception):
   pass
