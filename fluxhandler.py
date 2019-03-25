@@ -74,7 +74,6 @@ class Lights(object):
     self._timer.start()
 
   def _close(self):
-    print "closing connections"
     for name in self._lights:
       self._lights[name]['bulb'].close()
 
