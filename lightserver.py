@@ -80,7 +80,6 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     with FluxHandlerLock:
       preset = PRESETS[query['name'][0]][1]
-      # The preset is dict
       for bulb, val in preset.iteritems():
         r = int(val[0:2], 16)
         g = int(val[2:4], 16)
@@ -93,10 +92,9 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     return self._send_as_json(True)
 
   def SetLights(self, path):
-    # path format: /set_lights?bulb=[name]&power=[on/off]&rgbw=AABBCCDD
+    # path format: /set_lights?bulb=[name,name2]&power=[on/off]&rgbw=AABBCCDD
     url = urlparse.urlparse(path)
     query = urlparse.parse_qs(url.query)
-    # TODO: like, at least a *little* input validation
     with FluxHandlerLock:
       bulbs = []
       if query['bulb'][0] == 'all':
@@ -104,23 +102,43 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       else:
         bulbs = [b.strip() for b in query['bulb'][0].split(',')]
       for bulb in bulbs:
+        if bulb not in FluxHandler.list_bulbs():
+          print "got invalid bulb name:", bulb
+          continue
         if 'power' in query:
-          FluxHandler.set_power(bulb, True if query['power'][0] == 'on' else False)
+          val = query['power'][0]
+          if val == 'on':
+            FluxHandler.set_power(bulb, True)
+          elif val == 'off':
+            FluxHandler.set_power(bulb, False)
+          else:
+            print "invalid power setting:", val
         if 'rgbw' in query:
-          r = int(query['rgbw'][0][0:2], 16)
-          g = int(query['rgbw'][0][2:4], 16)
-          b = int(query['rgbw'][0][4:6], 16)
-          w = int(query['rgbw'][0][6:8], 16)
-          FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+          val = query['rgbw'][0]
+          if len(val) != 8:
+            print "invalid rgbw val (must be 8 hex digits)"
+            continue
+          try:
+            r = int(val[0:2], 16)
+            g = int(val[2:4], 16)
+            b = int(val[4:6], 16)
+            w = int(val[6:8], 16)
+            FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+          except ValueError:
+            print "ValueError parsing rgbw hex:", val
     self._send_as_json(True)
 
   def do_HEAD(self):
+    """Returns header information if the user is requesting a valid file.
+    Otherwise, does nothing. For json calls, we will send the headers as part
+    of the do_GET call instead. This seems to work ok."""
     f = self._send_head()
     if f:
       f.close()
 
   def _send_as_json(self, pyob):
-    """Encodes the passed-in python object as json and writes it out."""
+    """Encodes the passed-in python object as json and writes it out.
+    Also sends headers."""
     jsonob = json.dumps(pyob)
     self.send_response(200)
     self.send_header("Content-type", "application/json")
@@ -130,6 +148,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self.wfile.write(jsonob)
 
   def _send_head(self):
+    """Unchanged from SimpleHTTPRequestHandler, for basic file serving."""
     path = self._translate_path(self.path)
     f = None
     if os.path.isdir(path):
@@ -166,7 +185,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
   def _translate_path(self, path):
     """Translate a /-separated PATH to the local filename syntax.
-    Add on /html for this server.
+    Custom hack: add on "/html" for this server.
     Components that mean special things to the local file system
     (e.g. drive or directory names) are ignored.  (XXX They should
     probably be diagnosed.)
@@ -188,6 +207,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     return path
 
   def _guess_type(self, path):
+    """Unchanged from SimpleHTTPRequestHandler, for basic file serving."""
     base, ext = posixpath.splitext(path)
     if ext in self.extensions_map:
       return self.extensions_map[ext]
