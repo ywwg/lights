@@ -3,6 +3,8 @@
 A little webserver for controlling my Flux smart WiFi lights.  This might be useful for
 other people who hate the MagicHome app!
 
+![UI Screenshot](screenshot.png?raw=true)
+
 ## Setup
 
 * Install [flux_led](https://github.com/Danielhiversen/flux_led).
