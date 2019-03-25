@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 import time
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
@@ -15,6 +16,7 @@ class BulbNotFoundError(Exception):
 class Lights(object):
   def __init__(self, fake=False):
     self._lights = {}
+    self._timer = None
     if not fake:
       scanner = BulbScanner()
       scanner.scan(timeout=4)
@@ -64,8 +66,17 @@ class Lights(object):
     if name == 'kitchen':
       r, g = g, r
 
+    if self._timer:
+      self._timer.cancel()
+    self._timer = threading.Timer(5.0, self._close)
     self._lights[name]['bulb'].setRgbw(r, g, b, w,
-        brightness=brightness, retry=3)
+        brightness=brightness, retry=4)
+    self._timer.start()
+
+  def _close(self):
+    print "closing connections"
+    for name in self._lights:
+      self._lights[name]['bulb'].close()
 
   def refresh_state(self):
     for _, bulb in self._bulbs():
