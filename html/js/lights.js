@@ -32,8 +32,10 @@ function load_presets() {
   });
 }
 
-// If the selected color has any s, then set mode to color.
 function onColorInputStart(color) {
+  userInteracting = true;
+
+  // If the selected color has any s, then set mode to color.
   mode = $('#modeSelect input:radio:checked').val();
   hsl = color.hsl;
   if (mode === 'white' && hsl.s !== 0) {
@@ -41,7 +43,16 @@ function onColorInputStart(color) {
   }
 }
 
+function onColorInputEnd() {
+  userInteracting = false;
+}
+
 function onColorChange(color, changes) {
+  // Ignore changes not triggered by the user.
+  if (!userInteracting) {
+    return;
+  }
+
   bulb = $('#lightSelect').val();
   if (bulb === '') {
     console.log('bulb not selected');
@@ -87,6 +98,8 @@ function set_power(onoff) {
   });
 }
 
+var userInteracting = false;
+
 function init() {
   load_light_names();
   load_presets();
@@ -96,6 +109,7 @@ function init() {
   });
   colorPicker.on('color:change', onColorChange);
   colorPicker.on('input:start', onColorInputStart);
+  colorPicker.on('input:end', onColorInputEnd);
 
   // Reset the color picker to 0% sat when the user selects whites mode.
   $('#modeSelect').change(function(ob) {

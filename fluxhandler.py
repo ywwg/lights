@@ -93,3 +93,6 @@ class FakeBulb(object):
 
   def refreshState(self):
     print "refreshing state I guess"
+
+  def close(self):
+    print "closing connection"
