@@ -32,11 +32,16 @@ function load_presets() {
   });
 }
 
+// Returns the current light mode, either color or white
+function get_mode() {
+  return $('#modeSelect input:radio:checked').val();
+}
+
 function onColorInputStart(color) {
   userInteracting = true;
 
   // If the selected color has any s, then set mode to color.
-  mode = $('#modeSelect input:radio:checked').val();
+  mode = get_mode();
   hsl = color.hsl;
   if (mode === 'white' && hsl.s !== 0) {
     $('#mode-color').click();
@@ -59,7 +64,7 @@ function onColorChange(color, changes) {
     return;
   }
 
-  mode = $('#modeSelect input:radio:checked').val();
+  mode = get_mode();
   if (mode === 'color') {
     // Trim off '#'
     color = color.hexString.substring(1);
@@ -69,6 +74,7 @@ function onColorChange(color, changes) {
     });
   } else if (mode === 'white') {
     color = color.hsl.l;
+    // Lightness is on a scale from 0-100, not 0x00-0xFF
     hex = Math.round(((color) / 100.0) * 255).toString(16);
     $.ajax({
       type: 'GET',
@@ -111,10 +117,10 @@ function init() {
   colorPicker.on('input:start', onColorInputStart);
   colorPicker.on('input:end', onColorInputEnd);
 
-  // Reset the color picker to 0% sat when the user selects whites mode.
+  // Reset the color picker to 0% sat when the user selects whites mode so
+  // the ui is less confusing.
   $('#modeSelect').change(function(ob) {
-    mode = $('#modeSelect input:radio:checked').val();
-    if (mode === "white") {
+    if (get_mode() === "white") {
       curcolor = colorPicker.color.hsl;
       curcolor.s = 0;
       colorPicker.color.hsl = curcolor;

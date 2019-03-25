@@ -14,7 +14,7 @@ class BulbNotFoundError(Exception):
   pass
 
 class Lights(object):
-  def __init__(self, fake=False):
+  def __init__(self, fake=False, must_find_all=False):
     self._lights = {}
     self._timer = None
     if not fake:
@@ -39,6 +39,10 @@ class Lights(object):
         l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
       else:
         l['bulb'] = FakeBulb()
+
+    if must_find_all and len(self._lights) != len(BULBS):
+      print "didn't find all the lights, exiting"
+      sys.exit(1)
 
   def _bulbs(self):
     return [(name, l['bulb']) for name, l in self._lights.iteritems()]
