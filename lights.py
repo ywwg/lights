@@ -1,15 +1,15 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 
 import fluxhandler
 import lightserver
 
-import SocketServer
+import socketserver
 import sys
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
-    print "Usage: lights.py [port] (--fake)"
-    print " --fake: Use fake lights, not real ones"
+    print("Usage: lights.py [port] (--fake)")
+    print(" --fake: Use fake lights, not real ones")
     sys.exit(1)
 
   port = int(sys.argv[1])
@@ -20,6 +20,6 @@ if __name__ == '__main__':
 
   lightserver.FluxHandler = fluxhandler.Lights(fake=fake, must_find_all=True)
   handler = lightserver.LightsHTTPRequestHandler
-  httpd = SocketServer.TCPServer(("", port), handler)
-  print "serving at port", port
+  httpd = socketserver.TCPServer(("", port), handler)
+  print("serving at port", port)
   httpd.serve_forever()

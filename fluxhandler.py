@@ -24,16 +24,16 @@ class Lights(object):
       for scanned in scanner.getBulbInfo():
         bid = scanned['id']
         if bid in BULBS:
-          print 'Found real bulb: %s' % (BULBS[bid],)
+          print('Found real bulb: %s' % (BULBS[bid],))
           self._lights[BULBS[bid]] = {'info': scanned}
     else:
       for i, id in enumerate(BULBS):
-        print 'Found fake bulb: %s' % (BULBS[id],)
+        print('Found fake bulb: %s' % (BULBS[id],))
         self._lights[BULBS[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
 
-    for name, l in self._lights.iteritems():
+    for name, l in self._lights.items():
       if not l['info']:
-        print ('Did not find expected bulb', name)
+        print('Did not find expected bulb', name)
         sys.exit(1)
       if not fake:
         l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
@@ -41,22 +41,22 @@ class Lights(object):
         l['bulb'] = FakeBulb()
 
     if must_find_all and len(self._lights) != len(BULBS):
-      print "didn't find all the lights, exiting"
+      print("didn't find all the lights, exiting")
       sys.exit(1)
     self._start_close_timer()
 
   def _bulbs(self):
-    return [(name, l['bulb']) for name, l in self._lights.iteritems()]
+    return [(name, l['bulb']) for name, l in self._lights.items()]
 
   def list_bulbs(self):
     return [name for name in self._lights]
 
   def set_power(self, name, on=True):
     if name not in self._lights:
-      print "bulb not found:", name
+      print("bulb not found:", name)
       return BulbNotFoundError
     b = self._lights[name]['bulb']
-    print "setting bulb power:", name, on
+    print("setting bulb power:", name, on)
     b.turnOn() if on else b.turnOff()
     self._start_close_timer()
 
@@ -96,16 +96,16 @@ class Lights(object):
 
 class FakeBulb(object):
   def turnOn(self):
-    print "light goes on"
+    print("light goes on")
 
   def turnOff(self):
-    print "light goes off"
+    print("light goes off")
 
   def setRgbw(self, r, g, b, w, brightness=0, retry=2):
-    print "set rgbw", r, g, b, w, brightness, retry
+    print("set rgbw", r, g, b, w, brightness, retry)
 
   def refreshState(self):
-    print "refreshing state I guess"
+    print("refreshing state I guess")
 
   def close(self):
-    print "closing connection"
+    print("closing connection")

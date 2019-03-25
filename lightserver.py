@@ -1,19 +1,13 @@
-import BaseHTTPServer
 import cgi
+import http.server
 import json
 import mimetypes
 import os
 import posixpath
 import shutil
-import SimpleHTTPServer
 import threading
 import time
-import urllib
-import urlparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
+import urllib.request, urllib.parse, urllib.error
 
 # presets:
 #  name => tuple:
@@ -35,7 +29,7 @@ FluxHandler = None
 FluxHandlerLock = threading.Lock()
 
 # Most of the code is ripped from SimpleHTTPRequestHandler
-class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
   server_version = "Lights/1.0"
 
@@ -45,7 +39,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     req = self.path.split('?',1)[0]
     req = req.split('#',1)[0]
-    req = posixpath.normpath(urllib.unquote(req))
+    req = posixpath.normpath(urllib.parse.unquote(req))
     req = req.split('/')[-1]
 
     # Our custom handlers
@@ -69,18 +63,18 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self._send_as_json(lights)
 
   def ListPresets(self):
-    preset_names = sorted(PRESETS.keys(), key=lambda x: PRESETS[x][0])
+    preset_names = sorted(list(PRESETS.keys()), key=lambda x: PRESETS[x][0])
     self._send_as_json(preset_names)
 
   def ActivatePreset(self, path):
-    url = urlparse.urlparse(path)
-    query = urlparse.parse_qs(url.query)
+    url = urllib.parse.urlparse(path)
+    query = urllib.parse.parse_qs(url.query)
     if 'name' not in query:
       return self._send_as_json(False)
 
     with FluxHandlerLock:
       preset = PRESETS[query['name'][0]][1]
-      for bulb, val in preset.iteritems():
+      for bulb, val in preset.items():
         r = int(val[0:2], 16)
         g = int(val[2:4], 16)
         b = int(val[4:6], 16)
@@ -93,8 +87,8 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
   def SetLights(self, path):
     # path format: /set_lights?bulb=[name,name2]&power=[on/off]&rgbw=AABBCCDD
-    url = urlparse.urlparse(path)
-    query = urlparse.parse_qs(url.query)
+    url = urllib.parse.urlparse(path)
+    query = urllib.parse.parse_qs(url.query)
     with FluxHandlerLock:
       bulbs = []
       if query['bulb'][0] == 'all':
@@ -103,7 +97,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         bulbs = [b.strip() for b in query['bulb'][0].split(',')]
       for bulb in bulbs:
         if bulb not in FluxHandler.list_bulbs():
-          print "got invalid bulb name:", bulb
+          print("got invalid bulb name:", bulb)
           continue
         if 'power' in query:
           val = query['power'][0]
@@ -112,11 +106,11 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
           elif val == 'off':
             FluxHandler.set_power(bulb, False)
           else:
-            print "invalid power setting:", val
+            print("invalid power setting:", val)
         if 'rgbw' in query:
           val = query['rgbw'][0]
           if len(val) != 8:
-            print "invalid rgbw val (must be 8 hex digits)"
+            print("invalid rgbw val (must be 8 hex digits)")
             continue
           try:
             r = int(val[0:2], 16)
@@ -125,7 +119,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             w = int(val[6:8], 16)
             FluxHandler.set_rgbw_one(bulb, r, g, b, w)
           except ValueError:
-            print "ValueError parsing rgbw hex:", val
+            print("ValueError parsing rgbw hex:", val)
     self._send_as_json(True)
 
   def do_HEAD(self):
@@ -145,7 +139,7 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self.send_header("Content-Length", len(jsonob))
     # self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
     self.end_headers()
-    self.wfile.write(jsonob)
+    self.wfile.write(jsonob.encode())
 
   def _send_head(self):
     """Unchanged from SimpleHTTPRequestHandler, for basic file serving."""
@@ -193,9 +187,9 @@ class LightsHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # abandon query parameters
     path = path.split('?',1)[0]
     path = path.split('#',1)[0]
-    path = posixpath.normpath(urllib.unquote(path))
+    path = posixpath.normpath(urllib.parse.unquote(path))
     words = path.split('/')
-    words = filter(None, words)
+    words = [w for w in words if w]
 
     # XXXXXX custom hack here:
     path = os.path.join(os.getcwd(), 'html')
