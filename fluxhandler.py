@@ -43,6 +43,7 @@ class Lights(object):
     if must_find_all and len(self._lights) != len(BULBS):
       print "didn't find all the lights, exiting"
       sys.exit(1)
+    self._start_close_timer()
 
   def _bulbs(self):
     return [(name, l['bulb']) for name, l in self._lights.iteritems()]
@@ -57,6 +58,7 @@ class Lights(object):
     b = self._lights[name]['bulb']
     print "setting bulb power:", name, on
     b.turnOn() if on else b.turnOff()
+    self._start_close_timer()
 
   def set_rgbw_all(self, r, g, b, w, brightness=None):
     for name in self._lights:
@@ -70,11 +72,18 @@ class Lights(object):
     if name == 'kitchen':
       r, g = g, r
 
+    self._lights[name]['bulb'].setRgbw(r, g, b, w,
+        brightness=brightness, retry=4)
+    self._start_close_timer()
+
+  def _start_close_timer(self):
+    """Launch a timeout to close down the connections so they don't get stale.
+    If called multiple times it will cancel any existing timer and start a new
+    one.
+    """
     if self._timer:
       self._timer.cancel()
     self._timer = threading.Timer(5.0, self._close)
-    self._lights[name]['bulb'].setRgbw(r, g, b, w,
-        brightness=brightness, retry=4)
     self._timer.start()
 
   def _close(self):
