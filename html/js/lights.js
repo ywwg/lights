@@ -37,6 +37,10 @@ function get_mode() {
   return $('#modeSelect input:radio:checked').val();
 }
 
+function get_bulb() {
+  return $('#lightSelect').val();
+}
+
 function onColorInputStart(color) {
   userInteracting = true;
 
@@ -58,7 +62,7 @@ function onColorChange(color, changes) {
     return;
   }
 
-  bulb = $('#lightSelect').val();
+  bulb = get_bulb();
   if (bulb === '') {
     console.log('bulb not selected');
     return;
@@ -96,7 +100,7 @@ function activate_preset(name) {
 }
 
 function set_power(onoff) {
-  bulb = document.getElementById('lightSelect').value
+  bulb = get_bulb();
   if (bulb === '') {
     console.log('bulb not selected');
     return;
