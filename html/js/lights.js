@@ -50,6 +50,10 @@ function onColorInputStart(color) {
   if (mode === 'white' && hsl.s !== 0) {
     $('#mode-color').click();
   }
+
+  // Due to the ordering of events, color:change happens before input start,
+  // so we have to explicitly call onColorChange.
+  onColorChange(color);
 }
 
 function onColorInputEnd() {
