@@ -1,3 +1,8 @@
+import $ from 'jquery'
+import 'popper.js'
+import iro from '@jaames/iro'
+import 'bootstrap';
+
 // Populates the dropdown list of bulbs.
 function load_light_names() {
   $.ajax({
@@ -45,8 +50,8 @@ function onColorInputStart(color) {
   userInteracting = true;
 
   // If the selected color has any s, then set mode to color.
-  mode = get_mode();
-  hsl = color.hsl;
+  var mode = get_mode();
+  var hsl = color.hsl;
   if (mode === 'white' && hsl.s !== 0) {
     $('#mode-color').click();
   }
@@ -66,13 +71,13 @@ function onColorChange(color, changes) {
     return;
   }
 
-  bulb = get_bulb();
+  var bulb = get_bulb();
   if (bulb === '') {
     console.log('bulb not selected');
     return;
   }
 
-  mode = get_mode();
+  var mode = get_mode();
   if (mode === 'color') {
     // Trim off '#'
     color = color.hexString.substring(1);
@@ -96,15 +101,15 @@ function onColorChange(color, changes) {
   }
 }
 
-function activate_preset(name) {
+window.activate_preset = function(name) {
   $.ajax({
     type: 'GET',
     url: '/activate_preset?name=' + name,
   });
 }
 
-function set_power(onoff) {
-  bulb = get_bulb();
+window.set_power = function(onoff) {
+  var bulb = get_bulb();
   if (bulb === '') {
     console.log('bulb not selected');
     return;
@@ -117,7 +122,7 @@ function set_power(onoff) {
 
 var userInteracting = false;
 
-function init() {
+window.init = function() {
   load_light_names();
   load_presets();
 
@@ -132,7 +137,7 @@ function init() {
   // the ui is less confusing.
   $('#modeSelect').change(function(ob) {
     if (get_mode() === "white") {
-      curcolor = colorPicker.color.hsl;
+      var curcolor = colorPicker.color.hsl;
       curcolor.s = 0;
       colorPicker.color.hsl = curcolor;
     }
