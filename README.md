@@ -8,7 +8,7 @@ other people who hate the MagicHome app!
 ## Setup
 
 * Install [flux_led](https://github.com/Danielhiversen/flux_led).
-* run `npm update` to install js deps
+* run `npm install` to install js deps
 * run `webpack` to bundle the js deps
 * Run `flux_led -s` to scan for bulbs.
 * Edit fluxhandler.py and add your bulb MAC addresses to the list of BULBS, and give them names.
