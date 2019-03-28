@@ -2,6 +2,7 @@
   "name": "lights",
   "version": "1.0.0",
   "description": "A mobile-friendly webserver for controlling flux led lights",
+  "private": true,
   "dependencies": {
     "@jaames/iro": "^4.2.2",
     "bootstrap": "^4.3.1",
