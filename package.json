@@ -1,0 +1,25 @@
+{
+  "name": "lights",
+  "version": "1.0.0",
+  "description": "A mobile-friendly webserver for controlling flux led lights",
+  "dependencies": {
+    "@jaames/iro": "^4.2.2",
+    "bootstrap": "^4.3.1",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ywwg/lights.git"
+  },
+  "author": "Owen Williams",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/ywwg/lights/issues"
+  },
+  "homepage": "https://github.com/ywwg/lights#readme"
+}
