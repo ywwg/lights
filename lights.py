@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-import fluxhandler
-import lightserver
+from lights import fluxhandler
+from lights import lightserver
 
 import socketserver
 import sys
