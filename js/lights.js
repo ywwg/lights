@@ -88,7 +88,7 @@ function onColorChange(color, changes) {
   } else if (mode === 'white') {
     color = color.hsl.l;
     // Lightness is on a scale from 0-100, not 0x00-0xFF
-    hex = Math.round(((color) / 100.0) * 255).toString(16);
+    var hex = Math.round(((color) / 100.0) * 255).toString(16);
     if (hex.length == 1) {
       hex = "0" + hex;
     }
