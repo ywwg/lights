@@ -9,20 +9,26 @@ import threading
 import time
 import urllib.request, urllib.parse, urllib.error
 
+from collections import namedtuple
+
 # presets:
-#  name => tuple:
+#  name => namedtuple:
+#
 #   sort order, dict:
 #    name of bulb => RGBW
+
+Preset = namedtuple('Preset', ['sort_order', 'transition_time', 'bulbs'])
+
 PRESETS = {
-  '100': (0, {'all': '000000FF'}),
-  '50': (1, {'all': '00000088'}),
-  '20': (2, {'all': '00000022'}),
-  'tv med': (3, {'kitchen': '00000030',
-                   'couch': '00000018'}),
-  'tv low': (4, {'kitchen': '00000004',
-                   'couch': '00000006'}),
-  'blue': (5, {'all': '0000FF00'}),
-  'purple': (6, {'all': 'FF00FF00'}),
+  '100': Preset(sort_order=0, transition_time=0, bulbs={'all': '000000FF'}),
+  '50': Preset(sort_order=1, transition_time=0, bulbs={'all': '00000088'}),
+  '20': Preset(sort_order=2, transition_time=0, bulbs={'all': '00000022'}),
+  'tv med': Preset(sort_order=3, transition_time=0,
+                   bulbs={'kitchen': '00000030', 'couch': '00000018'}),
+  'tv low': Preset(sort_order=4, transition_time=0,
+                   bulbs={'kitchen': '00000004', 'couch': '00000006'}),
+  'blue': Preset(sort_order=5, transition_time=0, bulbs={'all': '0000FF00'}),
+  'purple': Preset(sort_order=6, transition_time=0, bulbs={'all': 'FF00FF00'}),
 }
 
 FluxHandler = None
@@ -63,7 +69,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     self._send_as_json(lights)
 
   def ListPresets(self):
-    preset_names = sorted(list(PRESETS.keys()), key=lambda x: PRESETS[x][0])
+    preset_names = sorted(list(PRESETS.keys()), key=lambda x: PRESETS[x].sort_order)
     self._send_as_json(preset_names)
 
   def ActivatePreset(self, path):
@@ -73,7 +79,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       return self._send_as_json(False)
 
     with FluxHandlerLock:
-      preset = PRESETS[query['name'][0]][1]
+      preset = PRESETS[query['name'][0]].bulbs
       for bulb, val in preset.items():
         r = int(val[0:2], 16)
         g = int(val[2:4], 16)
