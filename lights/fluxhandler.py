@@ -2,6 +2,9 @@ import os
 import sys
 import threading
 import time
+import traceback
+
+from . import anim
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
 
@@ -16,7 +19,9 @@ class BulbNotFoundError(Exception):
 class Lights(object):
   def __init__(self, fake=False, must_find_all=False):
     self._lights = {}
-    self._timer = None
+    self._close_timer = None
+    self._animation = None
+
     if not fake:
       scanner = BulbScanner()
       scanner.scan(timeout=4)
@@ -60,6 +65,25 @@ class Lights(object):
     b.turnOn() if on else b.turnOff()
     self._start_close_timer()
 
+  def start_animation(self, preset):
+    if self._animation:
+      self._animation.stop()
+
+    self._animation = anim.Animation(self, self._get_bulbs_state(), preset.bulbs,
+                                     preset.transition_time)
+
+  def stop_animation(self):
+    if self._animation:
+      self._animation.stop()
+      self._animation = None
+
+  def _get_bulbs_state(self):
+    state = {}
+    for name in self._lights:
+      r,g,b,w = self._lights[name]['bulb'].getRgbw()
+      state[name] ='0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
+    return state
+
   def set_rgbw_all(self, r, g, b, w, brightness=None):
     for name in self._lights:
       self.set_rgbw_one(name, r, g, b, w, brightness)
@@ -81,10 +105,10 @@ class Lights(object):
     If called multiple times it will cancel any existing timer and start a new
     one.
     """
-    if self._timer:
-      self._timer.cancel()
-    self._timer = threading.Timer(5.0, self._close)
-    self._timer.start()
+    if self._close_timer:
+      self._close_timer.cancel()
+    self._close_timer = threading.Timer(5.0, self._close)
+    self._close_timer.start()
 
   def _close(self):
     for name in self._lights:
@@ -95,14 +119,29 @@ class Lights(object):
       bulb.refreshState()
 
 class FakeBulb(object):
+  def __init__(self):
+      self._r = 0x00
+      self._g = 0x00
+      self._b = 0x00
+      self._w = 0x00
+      self._brightness = 0x00
+
   def turnOn(self):
     print("light goes on")
 
   def turnOff(self):
     print("light goes off")
 
+  def getRgbw(self):
+    return (self._r, self._g, self._b, self._w)
+
   def setRgbw(self, r, g, b, w, brightness=0, retry=2):
     print("set rgbw", r, g, b, w, brightness, retry)
+    self._r = r
+    self._g = g
+    self._b = b
+    self._w = w
+    self._brightness = brightness
 
   def refreshState(self):
     print("refreshing state I guess")

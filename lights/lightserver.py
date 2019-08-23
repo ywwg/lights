@@ -11,21 +11,15 @@ import urllib.request, urllib.parse, urllib.error
 
 from collections import namedtuple
 
-# presets:
-#  name => namedtuple:
-#
-#   sort order, dict:
-#    name of bulb => RGBW
-
 Preset = namedtuple('Preset', ['sort_order', 'transition_time', 'bulbs'])
 
 PRESETS = {
   '100': Preset(sort_order=0, transition_time=0, bulbs={'all': '000000FF'}),
   '50': Preset(sort_order=1, transition_time=0, bulbs={'all': '00000088'}),
   '20': Preset(sort_order=2, transition_time=0, bulbs={'all': '00000022'}),
-  'tv med': Preset(sort_order=3, transition_time=0,
+  'tv med': Preset(sort_order=3, transition_time=10,
                    bulbs={'kitchen': '00000030', 'couch': '00000018'}),
-  'tv low': Preset(sort_order=4, transition_time=0,
+  'tv low': Preset(sort_order=4, transition_time=10,
                    bulbs={'kitchen': '00000004', 'couch': '00000006'}),
   'blue': Preset(sort_order=5, transition_time=0, bulbs={'all': '0000FF00'}),
   'purple': Preset(sort_order=6, transition_time=0, bulbs={'all': 'FF00FF00'}),
@@ -79,7 +73,12 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       return self._send_as_json(False)
 
     with FluxHandlerLock:
-      preset = PRESETS[query['name'][0]].bulbs
+      preset = PRESETS[query['name'][0]]
+      if preset.transition_time > 0:
+        FluxHandler.start_animation(preset)
+        return self._send_as_json(True)
+      FluxHandler.stop_animation()
+      preset = preset.bulbs
       for bulb, val in preset.items():
         r = int(val[0:2], 16)
         g = int(val[2:4], 16)
@@ -93,6 +92,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
   def SetLights(self, path):
     # path format: /set_lights?bulb=[name,name2]&power=[on/off]&rgbw=AABBCCDD
+    FluxHandler.stop_animation()
     url = urllib.parse.urlparse(path)
     query = urllib.parse.parse_qs(url.query)
     with FluxHandlerLock:
