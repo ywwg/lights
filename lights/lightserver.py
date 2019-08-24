@@ -15,11 +15,12 @@ Preset = namedtuple('Preset', ['sort_order', 'transition_time', 'bulbs'])
 
 PRESETS = {
   '100': Preset(sort_order=0, transition_time=0, bulbs={'all': '000000FF'}),
+  '100 Slow': Preset(sort_order=0, transition_time=45, bulbs={'all': '000000FF'}),
   '50': Preset(sort_order=1, transition_time=0, bulbs={'all': '00000088'}),
   '20': Preset(sort_order=2, transition_time=0, bulbs={'all': '00000022'}),
-  'tv med': Preset(sort_order=3, transition_time=10,
+  'tv med': Preset(sort_order=3, transition_time=15,
                    bulbs={'kitchen': '00000030', 'couch': '00000018'}),
-  'tv low': Preset(sort_order=4, transition_time=10,
+  'tv low': Preset(sort_order=4, transition_time=15,
                    bulbs={'kitchen': '00000004', 'couch': '00000006'}),
   'blue': Preset(sort_order=5, transition_time=0, bulbs={'all': '0000FF00'}),
   'purple': Preset(sort_order=6, transition_time=0, bulbs={'all': 'FF00FF00'}),

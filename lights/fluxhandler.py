@@ -43,7 +43,7 @@ class Lights(object):
       if not fake:
         l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
       else:
-        l['bulb'] = FakeBulb()
+        l['bulb'] = FakeBulb(name)
 
     if must_find_all and len(self._lights) != len(BULBS):
       print("didn't find all the lights, exiting")
@@ -69,7 +69,20 @@ class Lights(object):
     if self._animation:
       self._animation.stop()
 
-    self._animation = anim.Animation(self, self._get_bulbs_state(), preset.bulbs,
+    # In the case of "all", we have to specifically enumerate the bulbs because
+    # the animator doesn't know about all the bulbs.
+    dst_bulbs = preset.bulbs
+    if 'all' in preset.bulbs:
+      dst_bulbs = {}
+      # If some bulbs are named in the preset we use them, otherwise we pull
+      # from the "all" entry.
+      for name in BULBS.values:
+        if name in preset.bulbs:
+          dst_bulbs[name] = preset.bulbs[name]
+        else:
+          dst_bulbs[name] = preset.bulbs['all']
+
+    self._animation = anim.Animation(self, self._get_bulbs_state(), dst_bulbs,
                                      preset.transition_time)
 
   def stop_animation(self):
@@ -119,24 +132,25 @@ class Lights(object):
       bulb.refreshState()
 
 class FakeBulb(object):
-  def __init__(self):
-      self._r = 0x00
-      self._g = 0x00
-      self._b = 0x00
-      self._w = 0x00
-      self._brightness = 0x00
+  def __init__(self, name):
+    self._name = name
+    self._r = 0x00
+    self._g = 0x00
+    self._b = 0x00
+    self._w = 0x00
+    self._brightness = 0x00
 
   def turnOn(self):
-    print("light goes on")
+    print('%s goes on' % self._name)
 
   def turnOff(self):
-    print("light goes off")
+    print('%s goes off' % self._name)
 
   def getRgbw(self):
     return (self._r, self._g, self._b, self._w)
 
   def setRgbw(self, r, g, b, w, brightness=0, retry=2):
-    print("set rgbw", r, g, b, w, brightness, retry)
+    print('%s: set rgbw' % self._name, r, g, b, w, brightness, retry)
     self._r = r
     self._g = g
     self._b = b
@@ -144,7 +158,7 @@ class FakeBulb(object):
     self._brightness = brightness
 
   def refreshState(self):
-    print("refreshing state I guess")
+    print('%s: refreshing state I guess' % self._name)
 
   def close(self):
-    print("closing connection")
+    print('%s: closing connection' % self._name)

@@ -6,7 +6,7 @@ import time
 class Animation(object):
 
   # Update lights every half second
-  _SET_RATE = 0.5
+  _SET_RATE = 0.1
 
   def __init__(self, lights, start_bulbs, end_bulbs, transition_time):
     # a Lights object for setting bulbs
@@ -52,14 +52,11 @@ class Animation(object):
 
   def _progress(self):
     p = (time.time() - self._start_time) / self._transition_time
-    if p < 0.0:
-      p = 0.0
-    if p > 1.0:
-      p = 1.0
-    return p
+    return min(max(p, 0.0), 1.0)
 
   @staticmethod
   def _interp_vals(src, dst, progress):
+    p = min(max(progress, 0.0), 1.0)
     s_r = int(src[0:2], 16)
     s_g = int(src[2:4], 16)
     s_b = int(src[4:6], 16)
@@ -70,10 +67,10 @@ class Animation(object):
     d_b = int(dst[4:6], 16)
     d_w = int(dst[6:8], 16)
 
-    i_r = s_r + (d_r - s_r) * progress
-    i_g = s_g + (d_g - s_g) * progress
-    i_b = s_b + (d_b - s_b) * progress
-    i_w = s_w + (d_w - s_w) * progress
+    i_r = int(s_r + (d_r - s_r) * p)
+    i_g = int(s_g + (d_g - s_g) * p)
+    i_b = int(s_b + (d_b - s_b) * p)
+    i_w = int(s_w + (d_w - s_w) * p)
 
     return i_r, i_g, i_b, i_w
 
@@ -90,13 +87,23 @@ if __name__ == '__main__':
     sys.exit(1)
 
   r,g,b,w = Animation._interp_vals(src, dst, 1.0)
-  if r != 0xff or g != 0x66 or b != 0x44 or w != 0x00:
+  if r != 0xFF or g != 0x66 or b != 0x44 or w != 0x00:
     print ('100%% fail: %d %d %d %d' % (r,g,b,w))
     sys.exit(1)
 
   r,g,b,w = Animation._interp_vals(src, dst, 0.5)
   if r != 0x7F or g != 0x55 or b != 0x55 or w != 0x7F:
     print ('50%% fail: %d %d %d %d' % (r,g,b,w))
+    sys.exit(1)
+
+  r,g,b,w = Animation._interp_vals(src, dst, -0.5)
+  if r != 0x00 or g != 0x44 or b != 0x66 or w != 0xFF:
+    print ('-50%% fail: %d %d %d %d' % (r,g,b,w))
+    sys.exit(1)
+
+  r,g,b,w = Animation._interp_vals(src, dst, 1.1)
+  if r != 0xFF or g != 0x66 or b != 0x44 or w != 0x00:
+    print ('110%% fail: %d %d %d %d' % (r,g,b,w))
     sys.exit(1)
 
   print ('tests pass')
