@@ -67,6 +67,7 @@ class Animation(object):
     d_b = int(dst[4:6], 16)
     d_w = int(dst[6:8], 16)
 
+    # Animation over HSL would be more pleasing than RGB.
     i_r = int(s_r + (d_r - s_r) * p)
     i_g = int(s_g + (d_g - s_g) * p)
     i_b = int(s_b + (d_b - s_b) * p)

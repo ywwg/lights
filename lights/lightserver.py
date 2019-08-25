@@ -18,7 +18,7 @@ PRESETS = {
   '100 Slow': Preset(sort_order=0, transition_time=45, bulbs={'all': '000000FF'}),
   '50': Preset(sort_order=1, transition_time=0, bulbs={'all': '00000088'}),
   '20': Preset(sort_order=2, transition_time=0, bulbs={'all': '00000022'}),
-  'tv med': Preset(sort_order=3, transition_time=15,
+  'tv med': Preset(sort_order=3, transition_time=10,
                    bulbs={'kitchen': '00000030', 'couch': '00000018'}),
   'tv low': Preset(sort_order=4, transition_time=15,
                    bulbs={'kitchen': '00000004', 'couch': '00000006'}),

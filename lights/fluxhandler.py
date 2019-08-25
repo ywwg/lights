@@ -76,7 +76,7 @@ class Lights(object):
       dst_bulbs = {}
       # If some bulbs are named in the preset we use them, otherwise we pull
       # from the "all" entry.
-      for name in BULBS.values:
+      for name in BULBS.values():
         if name in preset.bulbs:
           dst_bulbs[name] = preset.bulbs[name]
         else:
@@ -93,6 +93,7 @@ class Lights(object):
   def _get_bulbs_state(self):
     state = {}
     for name in self._lights:
+      self._lights[name]['bulb'].refreshState()
       r,g,b,w = self._lights[name]['bulb'].getRgbw()
       state[name] ='0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
     return state
