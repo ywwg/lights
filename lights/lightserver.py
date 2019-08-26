@@ -51,6 +51,8 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       return self.ActivatePreset(self.path)
     elif req == 'set_lights':
       return self.SetLights(self.path)
+    elif req == 'anim_progress':
+      return self.GetAnimProgress()
 
     f = self._send_head()
     if f:
@@ -137,6 +139,9 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
           except ValueError:
             print("ValueError parsing rgbw hex:", val)
     self._send_as_json(True)
+
+  def GetAnimProgress(self):
+    self._send_as_json(FluxHandler.get_animation_progress())
 
   def do_HEAD(self):
     """Returns header information if the user is requesting a valid file.

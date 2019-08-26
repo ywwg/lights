@@ -90,6 +90,16 @@ class Lights(object):
       self._animation.stop()
       self._animation = None
 
+  def get_animation_progress(self):
+    """Returns an int between 0 and 100 if there's an animation happening,
+    or -1 if no anim"""
+    if self._animation is None:
+      return -1
+    if not self._animation.running():
+      self._animation = None
+      return -1
+    return int(self._animation.progress() * 100.0)
+
   def _get_bulbs_state(self):
     state = {}
     for name in self._lights:

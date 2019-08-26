@@ -35,8 +35,8 @@ class Animation(object):
 
     progress = 0
     while not self._stop_anim.is_set() and progress < 1.0:
-      progress = self._progress()
-      print ('animation progress %f' % (progress,))
+      progress = self.progress()
+      print ('animation progress %d' % (int(progress * 100.0),))
 
       for bulb_name in self._end_bulbs:
         if bulb_name not in self._start_bulbs:
@@ -50,7 +50,12 @@ class Animation(object):
 
       time.sleep(Animation._SET_RATE)
 
-  def _progress(self):
+  def running(self):
+    """Returns true if the animation thread is running."""
+    return self._thread.is_alive() if self._thread else False
+
+  def progress(self):
+    """Returns animation progress between 0.0 and 1.0"""
     p = (time.time() - self._start_time) / self._transition_time
     return min(max(p, 0.0), 1.0)
 
