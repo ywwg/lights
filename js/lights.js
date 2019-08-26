@@ -115,6 +115,31 @@ window.activate_preset = function(name) {
     url: '/activate_preset?name=' + name
         + '&transition_time=' + get_transition_time(),
   });
+  if (progressTimer !== null) {
+    clearInterval(progressTimer);
+  }
+  progressTimer = setInterval(animProgress, PROGRESS_UPDATE_TIME);
+}
+
+function animProgress() {
+  $.ajax({
+    type: 'GET',
+    url: '/anim_progress',
+    dataType: 'json',
+    success: function(progress) {
+      if (progress === -1) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+        $('#progressContainer').hide();
+        $('#animProgress').attr('aria-valuenow', 0).css('width', '0%');
+        return;
+      }
+      $('#animProgress')
+        .attr('aria-valuenow', progress)
+        .css('width', progress + '%');
+      $('#progressContainer').show();
+    }
+  });
 }
 
 window.set_power = function(onoff) {
@@ -130,6 +155,8 @@ window.set_power = function(onoff) {
 }
 
 var userInteracting = false;
+var progressTimer = null;
+const PROGRESS_UPDATE_TIME = 250;
 
 window.init = function() {
   load_light_names();
@@ -155,4 +182,5 @@ window.init = function() {
 
   $('#speedRange').on('input change', onSpeedChange);
   onSpeedChange();
+  $('#progressContainer').hide();
 }
