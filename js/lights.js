@@ -153,5 +153,6 @@ window.init = function() {
     return true;
   });
 
-  $('#speedRange').on('input', onSpeedChange);
+  $('#speedRange').on('input change', onSpeedChange);
+  onSpeedChange();
 }
