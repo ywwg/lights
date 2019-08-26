@@ -11,19 +11,18 @@ import urllib.request, urllib.parse, urllib.error
 
 from collections import namedtuple
 
-Preset = namedtuple('Preset', ['sort_order', 'transition_time', 'bulbs'])
+Preset = namedtuple('Preset', ['sort_order', 'bulbs'])
 
 PRESETS = {
-  '100': Preset(sort_order=0, transition_time=0, bulbs={'all': '000000FF'}),
-  '100 Slow': Preset(sort_order=0, transition_time=45, bulbs={'all': '000000FF'}),
-  '50': Preset(sort_order=1, transition_time=0, bulbs={'all': '00000088'}),
-  '20': Preset(sort_order=2, transition_time=0, bulbs={'all': '00000022'}),
-  'tv med': Preset(sort_order=3, transition_time=10,
+  '100': Preset(sort_order=0, bulbs={'all': '000000FF'}),
+  '50': Preset(sort_order=1, bulbs={'all': '00000088'}),
+  '20': Preset(sort_order=2, bulbs={'all': '00000022'}),
+  'tv med': Preset(sort_order=3,
                    bulbs={'kitchen': '00000030', 'couch': '00000018'}),
-  'tv low': Preset(sort_order=4, transition_time=15,
+  'tv low': Preset(sort_order=4,
                    bulbs={'kitchen': '00000004', 'couch': '00000006'}),
-  'blue': Preset(sort_order=5, transition_time=0, bulbs={'all': '0000FF00'}),
-  'purple': Preset(sort_order=6, transition_time=0, bulbs={'all': 'FF00FF00'}),
+  'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
+  'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
 }
 
 FluxHandler = None
@@ -74,9 +73,19 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       return self._send_as_json(False)
 
     with FluxHandlerLock:
-      preset = PRESETS[query['name'][0]]
-      if preset.transition_time > 0:
-        FluxHandler.start_animation(preset)
+      preset = None
+      try:
+        preset = PRESETS[query['name'][0]]
+      except Exception as e:
+        print ('Error getting preset by name: ', e)
+        return self._send_as_json(True)
+      transition_time = 0
+      try:
+        transition_time = int(query['transition_time'][0])
+      except Exception as e:
+        print ('error getting transition_time, defaulting to 0:', e)
+      if transition_time > 0:
+        FluxHandler.start_animation(preset, transition_time)
         return self._send_as_json(True)
       FluxHandler.stop_animation()
       preset = preset.bulbs

@@ -46,6 +46,10 @@ function get_bulb() {
   return $('#lightSelect').val();
 }
 
+function get_transition_time() {
+  return $('#speedRange').val();
+}
+
 function onColorInputStart(color) {
   userInteracting = true;
 
@@ -101,10 +105,15 @@ function onColorChange(color, changes) {
   }
 }
 
+function onSpeedChange() {
+  $('#speedText').text(get_transition_time());
+}
+
 window.activate_preset = function(name) {
   $.ajax({
     type: 'GET',
-    url: '/activate_preset?name=' + name,
+    url: '/activate_preset?name=' + name
+        + '&transition_time=' + get_transition_time(),
   });
 }
 
@@ -143,4 +152,6 @@ window.init = function() {
     }
     return true;
   });
+
+  $('#speedRange').on('input', onSpeedChange);
 }

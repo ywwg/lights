@@ -65,7 +65,7 @@ class Lights(object):
     b.turnOn() if on else b.turnOff()
     self._start_close_timer()
 
-  def start_animation(self, preset):
+  def start_animation(self, preset, transition_time):
     if self._animation:
       self._animation.stop()
 
@@ -83,7 +83,7 @@ class Lights(object):
           dst_bulbs[name] = preset.bulbs['all']
 
     self._animation = anim.Animation(self, self._get_bulbs_state(), dst_bulbs,
-                                     preset.transition_time)
+                                     transition_time)
 
   def stop_animation(self):
     if self._animation:
