@@ -7,7 +7,7 @@ module.exports = {
     path: path.resolve(__dirname, 'html/js'),
     filename: 'lights-bundle.js'
   },
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin({minimize:true})
-  ]
+  optimization: {
+    minimize: false
+  }
 };

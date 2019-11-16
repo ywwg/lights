@@ -4,10 +4,10 @@
   "description": "A mobile-friendly webserver for controlling flux led lights",
   "private": true,
   "dependencies": {
-    "@jaames/iro": "^4.2.2",
+    "@jaames/iro": "^4.5.3",
     "bootstrap": "^4.3.1",
     "jquery": "^3.4.0",
-    "popper.js": "^1.14.7"
+    "popper.js": "^1.16.0"
   },
   "devDependencies": {},
   "scripts": {
