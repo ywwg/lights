@@ -130,6 +130,8 @@ class Lights(object):
     if name == 'kitchen':
       r, g = g, r
 
+    if r+g+b+w > 0 and not self._lights[name]['bulb'].is_on:
+      self._lights[name]['bulb'].turnOn()
     self._lights[name]['bulb'].setRgbw(r, g, b, w,
         brightness=brightness, retry=4)
     self._start_close_timer()

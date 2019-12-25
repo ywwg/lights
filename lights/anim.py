@@ -47,7 +47,7 @@ class Animation(object):
         i_r, i_g, i_b, i_w = Animation._interp_vals(
             src_val, self._end_bulbs[bulb_name], progress)
         self._lights.set_rgbw_one(bulb_name, i_r, i_g, i_b, i_w)
-        if i_r == 0 and i_g == 0 and i_b == 0 and i_w == 0:
+        if i_r + i_g + i_b + i_w == 0:
           self._lights.set_power(bulb_name, False)
         elif not self._lights.get_power(bulb_name):
           self._lights.set_power(bulb_name, True)
