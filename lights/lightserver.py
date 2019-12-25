@@ -21,6 +21,11 @@ PRESETS = {
                    bulbs={'kitchen': '00000030', 'couch': '00000018'}),
   'tv low': Preset(sort_order=4,
                    bulbs={'kitchen': '00000004', 'couch': '00000006'}),
+  'tv med nocouch': Preset(sort_order=3,
+                   bulbs={'kitchen': '00000030', 'couch': '00000000'}),
+  'tv low nocouch': Preset(sort_order=4,
+                   bulbs={'kitchen': '00000004', 'couch': '00000000'}),
+  'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
   'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
   'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
 }

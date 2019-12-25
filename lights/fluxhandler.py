@@ -65,6 +65,13 @@ class Lights(object):
     b.turnOn() if on else b.turnOff()
     self._start_close_timer()
 
+  def get_power(self, name):
+    if name not in self._lights:
+      print("bulb not found:", name)
+      return BulbNotFoundError
+    b = self._lights[name]['bulb']
+    return b.is_on
+
   def start_animation(self, preset, transition_time):
     if self._animation:
       self._animation.stop()
@@ -105,7 +112,10 @@ class Lights(object):
     for name in self._lights:
       self._lights[name]['bulb'].refreshState()
       r,g,b,w = self._lights[name]['bulb'].getRgbw()
-      state[name] ='0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
+      if self._lights[name]['bulb'].is_on:
+        state[name] = '0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
+      else:
+        state[name] = '00000000'
     return state
 
   def set_rgbw_all(self, r, g, b, w, brightness=None):
@@ -150,12 +160,19 @@ class FakeBulb(object):
     self._b = 0x00
     self._w = 0x00
     self._brightness = 0x00
+    self._power = False
 
   def turnOn(self):
     print('%s goes on' % self._name)
+    self._power = True
 
   def turnOff(self):
     print('%s goes off' % self._name)
+    self._power = False
+
+  @property
+  def is_on(self):
+    return self._power
 
   def getRgbw(self):
     return (self._r, self._g, self._b, self._w)

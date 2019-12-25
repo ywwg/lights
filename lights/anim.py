@@ -36,7 +36,7 @@ class Animation(object):
     progress = 0
     while not self._stop_anim.is_set() and progress < 1.0:
       progress = self.progress()
-      print ('animation progress %d' % (int(progress * 100.0),))
+      # print ('animation progress %d' % (int(progress * 100.0),))
 
       for bulb_name in self._end_bulbs:
         if bulb_name not in self._start_bulbs:
@@ -47,6 +47,10 @@ class Animation(object):
         i_r, i_g, i_b, i_w = Animation._interp_vals(
             src_val, self._end_bulbs[bulb_name], progress)
         self._lights.set_rgbw_one(bulb_name, i_r, i_g, i_b, i_w)
+        if i_r == 0 and i_g == 0 and i_b == 0 and i_w == 0:
+          self._lights.set_power(bulb_name, False)
+        elif not self._lights.get_power(bulb_name):
+          self._lights.set_power(bulb_name, True)
 
       time.sleep(Animation._SET_RATE)
 
