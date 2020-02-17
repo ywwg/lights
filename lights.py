@@ -6,6 +6,8 @@ from lights import lightserver
 import socketserver
 import sys
 
+class ThreadedTCPServer(socketserver.ThreadingMixIn,socketserver.TCPServer): pass
+
 if __name__ == '__main__':
   if len(sys.argv) < 2:
     print("Usage: lights.py (--fake) [port]")
@@ -21,7 +23,7 @@ if __name__ == '__main__':
 
   lightserver.FluxHandler = fluxhandler.Lights(fake=fake, must_find_all=True)
   handler = lightserver.LightsHTTPRequestHandler
-  httpd = socketserver.TCPServer(("", port), handler)
+  httpd = ThreadedTCPServer(("", port), handler)
   print("serving at port", port)
   try:
     httpd.serve_forever()
