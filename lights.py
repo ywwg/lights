@@ -23,4 +23,8 @@ if __name__ == '__main__':
   handler = lightserver.LightsHTTPRequestHandler
   httpd = socketserver.TCPServer(("", port), handler)
   print("serving at port", port)
-  httpd.serve_forever()
+  try:
+    httpd.serve_forever()
+  except KeyboardInterrupt:
+    pass
+  httpd.server_close()

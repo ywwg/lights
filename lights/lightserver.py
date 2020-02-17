@@ -42,6 +42,8 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # Usually we will serve files as requested, but if they ask for one of
     # our specially-handled paths then we call flux, etc.
 
+    print ("Get Received: ", self.path)
+
     req = self.path.split('?',1)[0]
     req = req.split('#',1)[0]
     req = posixpath.normpath(urllib.parse.unquote(req))
@@ -166,6 +168,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
     self.end_headers()
     self.wfile.write(jsonob.encode())
+    print ("json sent")
 
   def _send_head(self):
     """Unchanged from SimpleHTTPRequestHandler, for basic file serving."""
