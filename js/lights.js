@@ -75,6 +75,10 @@ function onColorChange(color, changes) {
     return;
   }
 
+  doColorChange(color);
+}
+
+function doColorChange(color) {
   var bulb = get_bulb();
   if (bulb === '') {
     console.log('bulb not selected');
@@ -172,10 +176,15 @@ window.init = function() {
   // Reset the color picker to 0% sat when the user selects whites mode so
   // the ui is less confusing.
   $('#modeSelect').change(function(ob) {
+    console.log('modeselected:' + get_mode());
     if (get_mode() === "white") {
-      var curcolor = colorPicker.color.hsl;
-      curcolor.s = 0;
-      colorPicker.color.hsl = curcolor;
+      var curcolor = colorPicker.color;
+      var curhsl = curcolor.hsl
+      curhsl.s = 0;
+      colorPicker.color.hsl = curhsl;
+      doColorChange(curcolor);
+    } else {
+      doColorChange(colorPicker.color);
     }
     return true;
   });

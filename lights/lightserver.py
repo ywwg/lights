@@ -14,17 +14,20 @@ from collections import namedtuple
 Preset = namedtuple('Preset', ['sort_order', 'bulbs'])
 
 PRESETS = {
-  '100': Preset(sort_order=0, bulbs={'all': '000000FF'}),
-  '50': Preset(sort_order=1, bulbs={'all': '00000088'}),
-  '20': Preset(sort_order=2, bulbs={'all': '00000022'}),
+  'dj bright': Preset(sort_order=0, bulbs={
+                          'clamp light': '000000FF',
+                          'neck light': '000000FF',
+                          'led strip': '000000FF',
+                          }),
+  'dj dim': Preset(sort_order=0, bulbs={
+                          'clamp light': '00000022',
+                          'neck light': '00000022',
+                          'led strip': '00000022',
+                          }),
   'tv med': Preset(sort_order=3,
-                   bulbs={'kitchen': '00000030', 'couch': '00000018'}),
+                   bulbs={'couch': '00000018'}),
   'tv low': Preset(sort_order=4,
-                   bulbs={'kitchen': '00000004', 'couch': '00000006'}),
-  'tv med nocouch': Preset(sort_order=3,
-                   bulbs={'kitchen': '00000030', 'couch': '00000000'}),
-  'tv low nocouch': Preset(sort_order=4,
-                   bulbs={'kitchen': '00000004', 'couch': '00000000'}),
+                   bulbs={'couch': '00000006'}),
   'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
   'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
   'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
@@ -168,7 +171,6 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
     self.end_headers()
     self.wfile.write(jsonob.encode())
-    print ("json sent")
 
   def _send_head(self):
     """Unchanged from SimpleHTTPRequestHandler, for basic file serving."""

@@ -6,8 +6,10 @@
   "dependencies": {
     "@jaames/iro": "^4.5.3",
     "bootstrap": "^4.3.1",
-    "jquery": "^3.4.0",
-    "popper.js": "^1.16.0"
+    "jquery": "^3.5.1",
+    "path": "^0.12.7",
+    "popper.js": "^1.16.0",
+    "resolve-cwd": "^3.0.0"
   },
   "devDependencies": {},
   "scripts": {

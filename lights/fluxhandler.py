@@ -10,7 +10,10 @@ from flux_led import WifiLedBulb, BulbScanner, LedTimer
 
 BULBS = {
   'A020A60EB2B6': 'couch',
-  '840D8E5C69AE': 'kitchen',
+  '840D8E5C69AE': 'led strip',
+  '2462AB4B13B5': 'clamp light',
+  '2462AB4B0CF8': 'bedroom',
+  '2462AB4B0A4F': 'neck light',
 }
 
 class BulbNotFoundError(Exception):
@@ -126,12 +129,19 @@ class Lights(object):
     if name not in self._lights:
       raise BulbNotFoundError
 
-    # The kitchen lights have r and g swapped, so flip them
-    if name == 'kitchen':
+    # The led strip has r and g swapped, so flip them
+    if name == 'led strip':
       r, g = g, r
 
     if r+g+b+w > 0 and not self._lights[name]['bulb'].is_on:
       self._lights[name]['bulb'].turnOn()
+
+    # Can't set white if there's any color, and vice versa
+    if r+g+b > 0:
+      w = None
+    elif w > 0:
+      r = g = b = None
+
     self._lights[name]['bulb'].setRgbw(r, g, b, w,
         brightness=brightness, retry=4)
     self._start_close_timer()
