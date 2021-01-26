@@ -24,6 +24,11 @@ PRESETS = {
                           'neck light': '00000022',
                           'led strip': '00000022',
                           }),
+  'dj off': Preset(sort_order=0, bulbs={
+                          'clamp light': '00000000',
+                          'neck light': '00000000',
+                          'led strip': '00000000',
+                          }),
   'tv med': Preset(sort_order=3,
                    bulbs={'couch': '00000018'}),
   'tv low': Preset(sort_order=4,
