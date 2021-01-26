@@ -9,7 +9,7 @@ other people who hate the MagicHome app!
 
 * Install [flux_led](https://github.com/Danielhiversen/flux_led).
 * run `npm install` to install js deps
-* run `webpack` to bundle the js deps
+* run `./node_modules/webpack/bin/webpack.js` to bundle the js deps
 * Run `flux_led -s` to scan for bulbs.
 * Edit fluxhandler.py and add your bulb MAC addresses to the list of BULBS, and give them names.
 * Edit lightserver.py to create whatever PRESETS you want to have.  Use "all" to apply the same color to all bulbs, or you can set different values for different bulbs

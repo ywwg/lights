@@ -118,6 +118,7 @@ window.activate_preset = function(name) {
     type: 'GET',
     url: '/activate_preset?name=' + name
         + '&transition_time=' + get_transition_time(),
+    async: false,
   });
   if (progressTimer !== null) {
     clearInterval(progressTimer);
@@ -175,7 +176,7 @@ window.init = function() {
 
   // Reset the color picker to 0% sat when the user selects whites mode so
   // the ui is less confusing.
-  $('#modeSelect').change(function(ob) {
+  $('#modeSelect').on('change', function(ob) {
     console.log('modeselected:' + get_mode());
     if (get_mode() === "white") {
       var curcolor = colorPicker.color;
