@@ -17,22 +17,31 @@ PRESETS = {
   'dj bright': Preset(sort_order=0, bulbs={
                           'clamp light': '000000FF',
                           'neck light': '000000FF',
-                          'led strip': '000000FF',
                           }),
   'dj dim': Preset(sort_order=0, bulbs={
                           'clamp light': '00000022',
                           'neck light': '00000022',
-                          'led strip': '00000022',
                           }),
   'dj off': Preset(sort_order=0, bulbs={
                           'clamp light': '00000000',
                           'neck light': '00000000',
                           'led strip': '00000000',
                           }),
+  'tv hi': Preset(sort_order=3,
+                   bulbs={
+                     'couch': '000000FF',
+                     'led strip': '000000FF'
+                     }),
   'tv med': Preset(sort_order=3,
-                   bulbs={'couch': '00000018'}),
+                   bulbs={
+                     'couch': '00000018',
+                     'led strip': '00000018'
+                     }),
   'tv low': Preset(sort_order=4,
-                   bulbs={'couch': '00000006'}),
+                   bulbs={
+                     'couch': '00000006',
+                     'led strip': '00000006'
+                     }),
   'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
   'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
   'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
