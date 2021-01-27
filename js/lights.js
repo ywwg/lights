@@ -7,8 +7,23 @@ import 'bootstrap';
 function load_light_names() {
   $.ajax({
     type: 'GET',
+    url: '/list_groups',
+    dataType: 'json',
+    async: false,
+    success: function(lights) {
+      for (var i = 0; i < lights.length; i++) {
+        $('#lightSelect')
+          .append(
+            '<option value="' + lights[i] + '">' + lights[i] + '</option>');
+      }
+    }
+  })
+  $('#lightSelect').append('<option disabled>──────────</option>');
+  $.ajax({
+    type: 'GET',
     url: '/list_lights',
     dataType: 'json',
+    async: false,
     success: function(lights) {
       for (var i = 0; i < lights.length; i++) {
         $('#lightSelect')
@@ -57,7 +72,7 @@ function onColorInputStart(color) {
   var mode = get_mode();
   var hsl = color.hsl;
   if (mode === 'white' && hsl.s !== 0) {
-    $('#mode-color').click();
+    $('#mode-color').trigger('click');
   }
 
   // Due to the ordering of events, color:change happens before input start,

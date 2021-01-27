@@ -47,6 +47,11 @@ PRESETS = {
   'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
 }
 
+GROUPS = {
+  'Living Room': ('couch', 'led strip'),
+  'DJ Room': ('clamp light', 'neck light')
+}
+
 FluxHandler = None
 FluxHandlerLock = threading.Lock()
 
@@ -69,6 +74,8 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # Our custom handlers
     if req == 'list_lights':
       return self.ListLights()
+    if req == 'list_groups':
+      return self.ListGroups()
     elif req == 'list_presets':
       return self.ListPresets()
     elif req == 'activate_preset':
@@ -82,6 +89,11 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     if f:
       shutil.copyfileobj(f, self.wfile)
       f.close()
+
+  def ListGroups(self):
+    with FluxHandlerLock:
+      lights = list(GROUPS.keys())
+    self._send_as_json(lights)
 
   def ListLights(self):
     with FluxHandlerLock:
@@ -135,6 +147,8 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       bulbs = []
       if query['bulb'][0] == 'all':
         bulbs = FluxHandler.list_bulbs()
+      elif query['bulb'][0] in GROUPS:
+        bulbs = GROUPS[query['bulb'][0]]
       else:
         bulbs = [b.strip() for b in query['bulb'][0].split(',')]
       for bulb in bulbs:
