@@ -14,13 +14,9 @@ from collections import namedtuple
 Preset = namedtuple('Preset', ['sort_order', 'bulbs'])
 
 PRESETS = {
-  'dj bright': Preset(sort_order=0, bulbs={
+  'dj on': Preset(sort_order=0, bulbs={
                           'clamp light': '000000FF',
                           'neck light': '000000FF',
-                          }),
-  'dj dim': Preset(sort_order=0, bulbs={
-                          'clamp light': '00000022',
-                          'neck light': '00000022',
                           }),
   'dj off': Preset(sort_order=0, bulbs={
                           'clamp light': '00000000',
@@ -37,13 +33,13 @@ PRESETS = {
                    bulbs={
                      'couch': '00000018',
                      'led strip': '00000018',
-                     'arch': '00000018'
+                     'arch': '00000009'
                      }),
   'tv low': Preset(sort_order=4,
                    bulbs={
                      'couch': '00000006',
                      'led strip': '00000006',
-                     'arch': '00000006'
+                     'arch': '00000000'
                      }),
   'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
   'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
@@ -51,8 +47,9 @@ PRESETS = {
 }
 
 GROUPS = {
-  'Living Room': ('couch', 'led strip'),
-  'DJ Room': ('clamp light', 'neck light')
+  'Living Room': ('couch', 'led strip', 'arch'),
+  'DJ Room': ('clamp light', 'neck light'),
+  'Bedroom': ('desk', 'bed right')
 }
 
 FluxHandler = None

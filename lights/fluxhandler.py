@@ -12,9 +12,10 @@ BULBS = {
   'A020A60EB2B6': 'couch',
   '840D8E5C69AE': 'led strip',
   '2462AB4B13B5': 'clamp light',
-  '2462AB4B0CF8': 'bedroom',
+  '2462AB4B0CF8': 'desk',
   '2462AB4B0A4F': 'neck light',
-  '500291305D50': 'arch'
+  '500291305D50': 'arch',
+  '50029131C4AD': 'bed right'
 }
 
 class BulbNotFoundError(Exception):
