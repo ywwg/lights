@@ -14,7 +14,7 @@ BULBS = {
   '2462AB4B13B5': 'clamp light',
   '2462AB4B0CF8': 'bedroom',
   '2462AB4B0A4F': 'neck light',
-  '500291305D50': 'arch',
+  '500291305D50': 'arch'
 }
 
 class BulbNotFoundError(Exception):
