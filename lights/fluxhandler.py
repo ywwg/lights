@@ -14,6 +14,7 @@ BULBS = {
   '2462AB4B13B5': 'clamp light',
   '2462AB4B0CF8': 'bedroom',
   '2462AB4B0A4F': 'neck light',
+  '500291305D50': 'arch',
 }
 
 class BulbNotFoundError(Exception):
@@ -136,7 +137,8 @@ class Lights(object):
     if r+g+b+w > 0 and not self._lights[name]['bulb'].is_on:
       self._lights[name]['bulb'].turnOn()
 
-    # Can't set white if there's any color, and vice versa
+    # Don't set white if there's any color, and vice versa
+    # (Newer bulbs support do support this)
     if r+g+b > 0:
       w = None
     elif w > 0:

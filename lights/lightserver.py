@@ -31,16 +31,19 @@ PRESETS = {
                    bulbs={
                      'couch': '000000FF',
                      'led strip': '000000FF'
+                     'arch': '000000FF'
                      }),
   'tv med': Preset(sort_order=3,
                    bulbs={
                      'couch': '00000018',
                      'led strip': '00000018'
+                     'arch': '00000018'
                      }),
   'tv low': Preset(sort_order=4,
                    bulbs={
                      'couch': '00000006',
                      'led strip': '00000006'
+                     'arch': '00000006'
                      }),
   'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
   'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
