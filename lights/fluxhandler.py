@@ -139,7 +139,12 @@ class Lights(object):
     if name == 'led strip':
       r, g = g, r
 
-    if r+g+b+w > 0 and not self._lights[name]['bulb'].is_on:
+    if r + g + b + w == 0:
+      self._lights[name]['bulb'].turnOff()
+      self._start_close_timer()
+      return
+
+    if not self._lights[name]['bulb'].is_on:
       self._lights[name]['bulb'].turnOn()
 
     # Don't set white if there's any color, and vice versa
