@@ -34,7 +34,9 @@ class Animation(object):
     """
 
     progress = 0
-    while not self._stop_anim.is_set() and progress < 1.0:
+    while progress < 1.0:
+      if self._stop_anim.is_set():
+        return
       progress = self.progress()
       # print ('animation progress %d' % (int(progress * 100.0),))
 
