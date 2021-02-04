@@ -54,6 +54,17 @@ class Animation(object):
 
       time.sleep(Animation._SET_RATE)
 
+    # Make sure we set bulbs to the end state
+    for bulb_name in self._end_bulbs:
+        src_val = self._start_bulbs[bulb_name]
+        i_r, i_g, i_b, i_w = Animation._interp_vals(
+            src_val, self._end_bulbs[bulb_name], 1.0)
+        self._lights.set_rgbw_one(bulb_name, i_r, i_g, i_b, i_w)
+        if i_r + i_g + i_b + i_w == 0:
+          self._lights.set_power(bulb_name, False)
+        elif not self._lights.get_power(bulb_name):
+          self._lights.set_power(bulb_name, True)
+
   def running(self):
     """Returns true if the animation thread is running."""
     return self._thread.is_alive() if self._thread else False

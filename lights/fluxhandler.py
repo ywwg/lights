@@ -117,6 +117,10 @@ class Lights(object):
     for name in self._lights:
       self._lights[name]['bulb'].refreshState()
       r,g,b,w = self._lights[name]['bulb'].getRgbw()
+      r = r and r or 0
+      g = g and g or 0
+      b = b and b or 0
+      w = w and w or 0
       if self._lights[name]['bulb'].is_on:
         state[name] = '0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
       else:
