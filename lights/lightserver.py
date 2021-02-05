@@ -24,9 +24,9 @@ PRESETS = {
                           }),
   'read': Preset(sort_order=1,
                    bulbs={
-                     'desk': '00000066',
-                     'bed right': '00000022',
-                     'bed left': '00000044'
+                     'desk': '00000061',
+                     'bed right': '00000040',
+                     'bed left': '0000000d'
                      }),
   'tv hi': Preset(sort_order=3,
                    bulbs={
