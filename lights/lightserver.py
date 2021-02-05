@@ -21,7 +21,6 @@ PRESETS = {
   'dj off': Preset(sort_order=0, bulbs={
                           'clamp light': '00000000',
                           'neck light': '00000000',
-                          'led strip': '00000000',
                           }),
   'tv hi': Preset(sort_order=3,
                    bulbs={
@@ -41,15 +40,12 @@ PRESETS = {
                      'led strip': '00000006',
                      'arch': '00000000'
                      }),
-  'red': Preset(sort_order=5, bulbs={'all': 'FF000000'}),
-  'blue': Preset(sort_order=5, bulbs={'all': '0000FF00'}),
-  'purple': Preset(sort_order=6, bulbs={'all': 'FF00FF00'}),
 }
 
 GROUPS = {
   'Living Room': ('couch', 'led strip', 'arch'),
   'DJ Room': ('clamp light', 'neck light'),
-  'Bedroom': ('desk', 'bed right')
+  'Bedroom': ('desk', 'bed right', 'bed left')
 }
 
 FluxHandler = None
