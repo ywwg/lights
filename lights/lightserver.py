@@ -22,6 +22,12 @@ PRESETS = {
                           'clamp light': '00000000',
                           'neck light': '00000000',
                           }),
+  'read': Preset(sort_order=1,
+                   bulbs={
+                     'desk': '00000066',
+                     'bed right': '00000022',
+                     'bed left': '00000044'
+                     }),
   'tv hi': Preset(sort_order=3,
                    bulbs={
                      'couch': '000000FF',
