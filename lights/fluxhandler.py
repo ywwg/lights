@@ -8,22 +8,11 @@ from . import anim
 
 from flux_led import WifiLedBulb, BulbScanner, LedTimer
 
-BULBS = {
-  'A020A60EB2B6': 'couch',
-  '840D8E5C69AE': 'led strip',
-  '2462AB4B13B5': 'clamp light',
-  '2462AB4B0CF8': 'desk',
-  '2462AB4B0A4F': 'neck light',
-  '500291305D50': 'arch',
-  '50029131C4AD': 'bed right',
-  '50029131FB4A': 'bed left'
-}
-
 class BulbNotFoundError(Exception):
   pass
 
 class Lights(object):
-  def __init__(self, fake=False, must_find_all=False):
+  def __init__(self, bulbs, fake=False, must_find_all=False):
     self._lights = {}
     self._close_timer = None
     self._animation = None
@@ -34,13 +23,13 @@ class Lights(object):
 
       for scanned in scanner.getBulbInfo():
         bid = scanned['id']
-        if bid in BULBS:
-          print('Found real bulb: %s' % (BULBS[bid],))
-          self._lights[BULBS[bid]] = {'info': scanned}
+        if bid in bulbs:
+          print('Found real bulb: %s' % (bulbs[bid],))
+          self._lights[bulbs[bid]] = {'info': scanned}
     else:
-      for i, id in enumerate(BULBS):
-        print('Found fake bulb: %s' % (BULBS[id],))
-        self._lights[BULBS[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
+      for i, id in enumerate(bulbs):
+        print('Found fake bulb: %s' % (bulbs[id],))
+        self._lights[bulbs[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
 
     for name, l in self._lights.items():
       if not l['info']:
@@ -51,7 +40,7 @@ class Lights(object):
       else:
         l['bulb'] = FakeBulb(name)
 
-    if must_find_all and len(self._lights) != len(BULBS):
+    if must_find_all and len(self._lights) != len(bulbs):
       print("didn't find all the lights, exiting")
       sys.exit(1)
     self._start_close_timer()
@@ -89,7 +78,7 @@ class Lights(object):
       dst_bulbs = {}
       # If some bulbs are named in the preset we use them, otherwise we pull
       # from the "all" entry.
-      for name in BULBS.values():
+      for name in self._lights.keys():
         if name in preset.bulbs:
           dst_bulbs[name] = preset.bulbs[name]
         else:

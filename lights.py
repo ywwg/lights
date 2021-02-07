@@ -3,28 +3,56 @@
 from lights import fluxhandler
 from lights import lightserver
 
+import argparse
+import json
 import socketserver
 import sys
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn,socketserver.TCPServer): pass
 
+def LoadConfig(path):
+  """Load a json config.
+
+  The config should have three sections: bulbs, groups, and presets.
+  bulbs is a map of hex ID to bulb name.
+  groups is a map of group name to list of bulb names.
+  presets is a map of preset name to the Preset namedtuple:
+    sort_order, which is an int sorting of the presets, and
+    bulbs, which is a map of bulb name to rgbw value
+
+  Raises:
+    Whatever various function calls might raise, like FileNotFound, etc.
+  """
+  config = None
+  with open(path) as f:
+    config = json.load(f)
+
+  presets = {}
+  for name in config['presets']:
+    presets[name] = lightserver.Preset(**config['presets'][name])
+
+  return config['bulbs'], config['groups'], presets
+
 if __name__ == '__main__':
-  if len(sys.argv) < 2:
-    print("Usage: lights.py (--fake) [port]")
-    print(" --fake: Use fake lights, not real ones")
-    sys.exit(1)
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--port", help="port to run on",
+                    type=int, default=8000)
+  parser.add_argument("--fake", help="use fake lights")
+  parser.add_argument("config", help="configuration file",
+                    type=str)
+  args = parser.parse_args()
 
-  fake = False
-  if len(sys.argv) > 2:
-    if sys.argv[1] == '--fake':
-      fake = True
+  bulbs, groups, presets = LoadConfig(args.config)
 
-  port = int(sys.argv[-1])
+  lightserver.FluxHandler = fluxhandler.Lights(
+    bulbs, fake=args.fake, must_find_all=True)
 
-  lightserver.FluxHandler = fluxhandler.Lights(fake=fake, must_find_all=True)
-  handler = lightserver.LightsHTTPRequestHandler
-  httpd = ThreadedTCPServer(("", port), handler)
-  print("serving at port", port)
+  def handler(*args, **kwargs):
+    lightserver.LightsHTTPRequestHandler(
+      groups, presets, *args, **kwargs)
+
+  httpd = ThreadedTCPServer(("", args.port), handler)
+  print("serving at port", args.port)
   try:
     httpd.serve_forever()
   except KeyboardInterrupt:

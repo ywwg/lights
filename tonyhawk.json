@@ -1,0 +1,66 @@
+{
+  "bulbs": {
+    "A020A60EB2B6": "couch",
+    "840D8E5C69AE": "led strip",
+    "2462AB4B13B5": "clamp light",
+    "2462AB4B0CF8": "desk",
+    "2462AB4B0A4F": "neck light",
+    "500291305D50": "arch",
+    "50029131C4AD": "bed right",
+    "50029131FB4A": "bed left"
+  },
+
+  "groups":{
+    "Living Room": ["couch", "led strip", "arch"],
+    "DJ Room": ["clamp light", "neck light"],
+    "Bedroom": ["desk", "bed right", "bed left"]
+  },
+  "presets": {
+    "dj on": {
+      "sort_order": 0,
+      "bulbs": {
+        "clamp light": "000000FF",
+        "neck light": "000000FF"
+      }
+    },
+    "dj off": {
+      "sort_order": 0,
+      "bulbs": {
+        "clamp light": "00000000",
+        "neck light": "00000000"
+      }
+    },
+    "read": {
+      "sort_order": 1,
+      "bulbs": {
+        "desk": "00000061",
+        "bed right": "00000040",
+        "bed left": "0000000d"
+      }
+    },
+    "tv hi": {
+      "sort_order": 3,
+      "bulbs": {
+        "couch": "000000FF",
+        "led strip": "000000FF",
+        "arch": "000000FF"
+      }
+    },
+    "tv med": {
+      "sort_order": 3,
+      "bulbs": {
+        "couch": "00000018",
+        "led strip": "00000018",
+        "arch": "00000009"
+      }
+    },
+    "tv low": {
+      "sort_order": 4,
+      "bulbs": {
+        "couch": "00000006",
+        "led strip": "00000006",
+        "arch": "00000000"
+      }
+    }
+  }
+}

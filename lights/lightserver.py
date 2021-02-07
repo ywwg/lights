@@ -13,47 +13,6 @@ from collections import namedtuple
 
 Preset = namedtuple('Preset', ['sort_order', 'bulbs'])
 
-PRESETS = {
-  'dj on': Preset(sort_order=0, bulbs={
-                          'clamp light': '000000FF',
-                          'neck light': '000000FF',
-                          }),
-  'dj off': Preset(sort_order=0, bulbs={
-                          'clamp light': '00000000',
-                          'neck light': '00000000',
-                          }),
-  'read': Preset(sort_order=1,
-                   bulbs={
-                     'desk': '00000061',
-                     'bed right': '00000040',
-                     'bed left': '0000000d'
-                     }),
-  'tv hi': Preset(sort_order=3,
-                   bulbs={
-                     'couch': '000000FF',
-                     'led strip': '000000FF',
-                     'arch': '000000FF'
-                     }),
-  'tv med': Preset(sort_order=3,
-                   bulbs={
-                     'couch': '00000018',
-                     'led strip': '00000018',
-                     'arch': '00000009'
-                     }),
-  'tv low': Preset(sort_order=4,
-                   bulbs={
-                     'couch': '00000006',
-                     'led strip': '00000006',
-                     'arch': '00000000'
-                     }),
-}
-
-GROUPS = {
-  'Living Room': ('couch', 'led strip', 'arch'),
-  'DJ Room': ('clamp light', 'neck light'),
-  'Bedroom': ('desk', 'bed right', 'bed left')
-}
-
 FluxHandler = None
 FluxHandlerLock = threading.Lock()
 
@@ -61,6 +20,11 @@ FluxHandlerLock = threading.Lock()
 class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
   server_version = "Lights/1.0"
+
+  def __init__(self, groups, presets, *args, **kwargs):
+    self._groups = groups
+    self._presets = presets
+    super().__init__(*args, **kwargs)
 
   def do_GET(self):
     # Usually we will serve files as requested, but if they ask for one of
@@ -94,7 +58,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
   def ListGroups(self):
     with FluxHandlerLock:
-      lights = list(GROUPS.keys())
+      lights = list(self._groups.keys())
     self._send_as_json(lights)
 
   def ListLights(self):
@@ -103,7 +67,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     self._send_as_json(lights)
 
   def ListPresets(self):
-    preset_names = sorted(list(PRESETS.keys()), key=lambda x: PRESETS[x].sort_order)
+    preset_names = sorted(list(self._presets.keys()), key=lambda x: self._presets[x].sort_order)
     self._send_as_json(preset_names)
 
   def ActivatePreset(self, path):
@@ -115,7 +79,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     with FluxHandlerLock:
       preset = None
       try:
-        preset = PRESETS[query['name'][0]]
+        preset = self._presets[query['name'][0]]
       except Exception as e:
         print ('Error getting preset by name: ', e)
         return self._send_as_json(True)
@@ -149,8 +113,8 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       bulbs = []
       if query['bulb'][0] == 'all':
         bulbs = FluxHandler.list_bulbs()
-      elif query['bulb'][0] in GROUPS:
-        bulbs = GROUPS[query['bulb'][0]]
+      elif query['bulb'][0] in self._groups:
+        bulbs = self._groups[query['bulb'][0]]
       else:
         bulbs = [b.strip() for b in query['bulb'][0].split(',')]
       for bulb in bulbs:
