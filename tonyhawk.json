@@ -1,17 +1,19 @@
 {
   "bulbs": {
-    "A020A60EB2B6": "couch",
-    "840D8E5C69AE": "led strip",
-    "2462AB4B13B5": "clamp light",
-    "2462AB4B0CF8": "desk",
     "2462AB4B0A4F": "neck light",
+    "2462AB4B0CF8": "desk",
+    "2462AB4B13B5": "clamp light",
     "500291305D50": "arch",
+    "500291306249": "arch 2",
     "50029131C4AD": "bed right",
-    "50029131FB4A": "bed left"
+    "50029131F0EE": "arch 3",
+    "50029131FB4A": "bed left",
+    "840D8E5C69AE": "led strip",
+    "A020A60EB2B6": "couch"
   },
 
   "groups":{
-    "Living Room": ["couch", "led strip", "arch"],
+    "Living Room": ["couch", "led strip", "arch", "arch 2", "arch 3"],
     "DJ Room": ["clamp light", "neck light"],
     "Bedroom": ["desk", "bed right", "bed left"]
   },
@@ -43,7 +45,9 @@
       "bulbs": {
         "couch": "000000FF",
         "led strip": "000000FF",
-        "arch": "000000FF"
+        "arch": "000000FF",
+        "arch 2": "000000FF",
+        "arch 3": "000000FF"
       }
     },
     "tv med": {
@@ -51,7 +55,9 @@
       "bulbs": {
         "couch": "00000018",
         "led strip": "00000018",
-        "arch": "00000009"
+        "arch": "00000000",
+        "arch 2": "00000000",
+        "arch 3": "00000009"
       }
     },
     "tv low": {
@@ -59,7 +65,9 @@
       "bulbs": {
         "couch": "00000006",
         "led strip": "00000006",
-        "arch": "00000000"
+        "arch": "00000000",
+        "arch 2": "00000000",
+        "arch 3": "00000000"
       }
     }
   }
