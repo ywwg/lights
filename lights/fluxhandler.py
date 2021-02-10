@@ -49,7 +49,7 @@ class Lights(object):
     return [(name, l['bulb']) for name, l in self._lights.items()]
 
   def list_bulbs(self):
-    return [name for name in self._lights]
+    return sorted([name for name in self._lights])
 
   def set_power(self, name, on=True):
     if name not in self._lights:

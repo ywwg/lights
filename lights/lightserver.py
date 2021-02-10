@@ -58,7 +58,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
   def ListGroups(self):
     with FluxHandlerLock:
-      lights = list(self._groups.keys())
+      lights = sorted(list(self._groups.keys()))
     self._send_as_json(lights)
 
   def ListLights(self):

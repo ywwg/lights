@@ -15,7 +15,8 @@
   "groups":{
     "Living Room": ["couch", "led strip", "arch", "arch 2", "arch 3"],
     "DJ Room": ["clamp light", "neck light"],
-    "Bedroom": ["desk", "bed right", "bed left"]
+    "Bedroom": ["desk", "bed right", "bed left"],
+    "Arch Light": ["arch", "arch 2", "arch 3"]
   },
   "presets": {
     "dj on": {
