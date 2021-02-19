@@ -41,6 +41,14 @@
         "bed left": "0000000d"
       }
     },
+    "br med": {
+      "sort_order": 1,
+      "bulbs": {
+        "desk": "000000ff",
+        "bed right": "00000000",
+        "bed left": "000000ff"
+      }
+    },
     "tv hi": {
       "sort_order": 3,
       "bulbs": {
@@ -54,11 +62,11 @@
     "tv med": {
       "sort_order": 3,
       "bulbs": {
-        "couch": "00000018",
-        "led strip": "00000018",
+        "couch": "00000022",
+        "led strip": "00000022",
         "arch": "00000000",
         "arch 2": "00000000",
-        "arch 3": "00000009"
+        "arch 3": "00000010"
       }
     },
     "tv low": {
