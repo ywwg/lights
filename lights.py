@@ -6,7 +6,6 @@ from lights import lightserver
 import argparse
 import json
 import socketserver
-import sys
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn,socketserver.TCPServer): pass
 
@@ -44,8 +43,7 @@ if __name__ == '__main__':
 
   bulbs, groups, presets = LoadConfig(args.config)
 
-  lightserver.FluxHandler = fluxhandler.Lights(
-    bulbs, fake=args.fake, must_find_all=True)
+  lightserver.FluxHandler = fluxhandler.Lights(bulbs, fake=args.fake)
 
   def handler(*args, **kwargs):
     lightserver.LightsHTTPRequestHandler(
@@ -57,4 +55,5 @@ if __name__ == '__main__':
     httpd.serve_forever()
   except KeyboardInterrupt:
     pass
+  lightserver.FluxHandler.stop()
   httpd.server_close()

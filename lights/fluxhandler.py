@@ -1,73 +1,52 @@
-import os
-import sys
 import threading
-import time
-import traceback
 
-from . import anim
-
-from flux_led import WifiLedBulb, BulbScanner, LedTimer
+from . import anim, scanner
 
 class BulbNotFoundError(Exception):
   pass
 
 class Lights(object):
-  def __init__(self, bulbs, fake=False, must_find_all=False):
-    self._lights = {}
+
+  SCAN_PERIOD_SECS = 60 * 5
+
+  def __init__(self, bulbs, fake=False):
     self._close_timer = None
     self._animation = None
+    self._scanner = scanner.Scanner(bulbs, self.SCAN_PERIOD_SECS, fake)
 
-    if not fake:
-      scanner = BulbScanner()
-      scanner.scan(timeout=4)
-
-      for scanned in scanner.getBulbInfo():
-        bid = scanned['id']
-        if bid in bulbs:
-          print('Found real bulb: %s' % (bulbs[bid],))
-          self._lights[bulbs[bid]] = {'info': scanned}
-    else:
-      for i, id in enumerate(bulbs):
-        print('Found fake bulb: %s' % (bulbs[id],))
-        self._lights[bulbs[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
-
-    for name, l in self._lights.items():
-      if not l['info']:
-        print('Did not find expected bulb', name)
-        sys.exit(1)
-      if not fake:
-        l['bulb'] = WifiLedBulb(l['info']['ipaddr'])
-      else:
-        l['bulb'] = FakeBulb(name)
-
-    if must_find_all and len(self._lights) != len(bulbs):
-      print("didn't find all the lights, exiting")
-      sys.exit(1)
     self._start_close_timer()
 
+  def stop(self):
+    self._scanner.stop()
+
   def _bulbs(self):
-    return [(name, l['bulb']) for name, l in self._lights.items()]
+    lights = self._scanner.lights()
+    return [(name, l['bulb']) for name, l in lights.items()]
 
   def list_bulbs(self):
-    return sorted([name for name in self._lights])
+    lights = self._scanner.lights()
+    return sorted([name for name in lights])
 
   def set_power(self, name, on=True):
-    if name not in self._lights:
+    lights = self._scanner.lights()
+    if name not in lights:
       print("bulb not found:", name)
       return BulbNotFoundError
-    b = self._lights[name]['bulb']
+    b = lights[name]['bulb']
     print("setting bulb power:", name, on)
     b.turnOn() if on else b.turnOff()
     self._start_close_timer()
 
   def get_power(self, name):
-    if name not in self._lights:
+    lights = self._scanner.lights()
+    if name not in lights:
       print("bulb not found:", name)
       return BulbNotFoundError
-    b = self._lights[name]['bulb']
+    b = lights[name]['bulb']
     return b.is_on
 
   def start_animation(self, preset, transition_time):
+    lights = self._scanner.lights()
     if self._animation:
       self._animation.stop()
 
@@ -78,14 +57,14 @@ class Lights(object):
       dst_bulbs = {}
       # If some bulbs are named in the preset we use them, otherwise we pull
       # from the "all" entry.
-      for name in self._lights.keys():
+      for name in lights.keys():
         if name in preset.bulbs:
           dst_bulbs[name] = preset.bulbs[name]
         else:
           dst_bulbs[name] = preset.bulbs['all']
 
     self._animation = anim.Animation(self, self._get_bulbs_state(), dst_bulbs,
-                                     transition_time)
+                                    transition_time)
 
   def stop_animation(self):
     if self._animation:
@@ -103,26 +82,29 @@ class Lights(object):
     return int(self._animation.progress() * 100.0)
 
   def _get_bulbs_state(self):
+    lights = self._scanner.lights()
     state = {}
-    for name in self._lights:
-      self._lights[name]['bulb'].refreshState()
-      r,g,b,w = self._lights[name]['bulb'].getRgbw()
+    for name in lights:
+      lights[name]['bulb'].refreshState()
+      r,g,b,w = lights[name]['bulb'].getRgbw()
       r = r and r or 0
       g = g and g or 0
       b = b and b or 0
       w = w and w or 0
-      if self._lights[name]['bulb'].is_on:
+      if lights[name]['bulb'].is_on:
         state[name] = '0x{:08x}'.format(int(r * 16**6 + g * 16**4 + b * 16**2 + w))[2:]
       else:
         state[name] = '00000000'
     return state
 
   def set_rgbw_all(self, r, g, b, w, brightness=None):
-    for name in self._lights:
+    lights = self._scanner.lights()
+    for name in lights:
       self.set_rgbw_one(name, r, g, b, w, brightness)
 
   def set_rgbw_one(self, name, r, g, b, w, brightness=None):
-    if name not in self._lights:
+    lights = self._scanner.lights()
+    if name not in lights:
       raise BulbNotFoundError
 
     # The led strip has r and g swapped, so flip them
@@ -130,12 +112,12 @@ class Lights(object):
       r, g = g, r
 
     if r + g + b + w == 0:
-      self._lights[name]['bulb'].turnOff()
+      lights[name]['bulb'].turnOff()
       self._start_close_timer()
       return
 
-    if not self._lights[name]['bulb'].is_on:
-      self._lights[name]['bulb'].turnOn()
+    if not lights[name]['bulb'].is_on:
+      lights[name]['bulb'].turnOn(retry=4)
 
     # Don't set white if there's any color, and vice versa
     # (Newer bulbs support do support this)
@@ -144,7 +126,7 @@ class Lights(object):
     elif w > 0:
       r = g = b = None
 
-    self._lights[name]['bulb'].setRgbw(r, g, b, w,
+    lights[name]['bulb'].setRgbw(r, g, b, w,
         brightness=brightness, retry=4)
     self._start_close_timer()
 
@@ -159,48 +141,10 @@ class Lights(object):
     self._close_timer.start()
 
   def _close(self):
-    for name in self._lights:
-      self._lights[name]['bulb'].close()
+    lights = self._scanner.lights()
+    for name in lights:
+      lights[name]['bulb'].close()
 
   def refresh_state(self):
     for _, bulb in self._bulbs():
       bulb.refreshState()
-
-class FakeBulb(object):
-  def __init__(self, name):
-    self._name = name
-    self._r = 0x00
-    self._g = 0x00
-    self._b = 0x00
-    self._w = 0x00
-    self._brightness = 0x00
-    self._power = False
-
-  def turnOn(self):
-    print('%s goes on' % self._name)
-    self._power = True
-
-  def turnOff(self):
-    print('%s goes off' % self._name)
-    self._power = False
-
-  @property
-  def is_on(self):
-    return self._power
-
-  def getRgbw(self):
-    return (self._r, self._g, self._b, self._w)
-
-  def setRgbw(self, r, g, b, w, brightness=0, retry=2):
-    print('%s: set rgbw' % self._name, r, g, b, w, brightness, retry)
-    self._r = r
-    self._g = g
-    self._b = b
-    self._w = w
-    self._brightness = brightness
-
-  def refreshState(self):
-    print('%s: refreshing state I guess' % self._name)
-
-  def close(self):
-    print('%s: closing connection' % self._name)

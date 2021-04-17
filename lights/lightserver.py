@@ -1,4 +1,3 @@
-import cgi
 import http.server
 import json
 import mimetypes
@@ -6,7 +5,6 @@ import os
 import posixpath
 import shutil
 import threading
-import time
 import urllib.request, urllib.parse, urllib.error
 
 from collections import namedtuple
@@ -119,7 +117,7 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         bulbs = [b.strip() for b in query['bulb'][0].split(',')]
       for bulb in bulbs:
         if bulb not in FluxHandler.list_bulbs():
-          print("got invalid bulb name:", bulb)
+          print("unknown bulb (is it off?):", bulb)
           continue
         if 'power' in query:
           val = query['power'][0]
