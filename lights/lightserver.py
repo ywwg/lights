@@ -9,6 +9,8 @@ import urllib.request, urllib.parse, urllib.error
 
 from collections import namedtuple
 
+from lights.fluxhandler import BulbNotFoundError
+
 Preset = namedtuple('Preset', ['sort_order', 'bulbs'])
 
 FluxHandler = None
@@ -96,10 +98,13 @@ class LightsHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         g = int(val[2:4], 16)
         b = int(val[4:6], 16)
         w = int(val[6:8], 16)
-        if bulb == 'all':
-          FluxHandler.set_rgbw_all(r, g, b, w)
-        else:
-          FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+        try:
+          if bulb == 'all':
+            FluxHandler.set_rgbw_all(r, g, b, w)
+          else:
+            FluxHandler.set_rgbw_one(bulb, r, g, b, w)
+        except BulbNotFoundError as e:
+          print('Skipping unknown bulb: ', e.args[0])
     return self._send_as_json(True)
 
   def SetLights(self, path):

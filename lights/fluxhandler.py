@@ -30,8 +30,7 @@ class Lights(object):
   def set_power(self, name, on=True):
     lights = self._scanner.lights()
     if name not in lights:
-      print("bulb not found:", name)
-      return BulbNotFoundError
+      raise BulbNotFoundError(name)
     b = lights[name]['bulb']
     print("setting bulb power:", name, on)
     b.turnOn() if on else b.turnOff()
@@ -40,8 +39,7 @@ class Lights(object):
   def get_power(self, name):
     lights = self._scanner.lights()
     if name not in lights:
-      print("bulb not found:", name)
-      return BulbNotFoundError
+      raise BulbNotFoundError(name)
     b = lights[name]['bulb']
     return b.is_on
 
@@ -105,7 +103,7 @@ class Lights(object):
   def set_rgbw_one(self, name, r, g, b, w, brightness=None):
     lights = self._scanner.lights()
     if name not in lights:
-      raise BulbNotFoundError
+      raise BulbNotFoundError(name)
 
     # The led strip has r and g swapped, so flip them
     if name == 'led strip':
