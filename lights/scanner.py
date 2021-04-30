@@ -35,6 +35,7 @@ class Scanner(object):
   def _scan(self):
     while not self._stop.is_set():
       with self._lock:
+        new_lights = {}
         print('Scanning for bulbs')
         old_names = tuple(self._lights.keys())
         found_names = []
@@ -45,24 +46,23 @@ class Scanner(object):
             bid = scanned['id']
             if bid in self._bulb_map:
               print('Found real bulb: %s' % (self._bulb_map[bid],))
-              self._lights[self._bulb_map[bid]] = {'info': scanned}
+              new_lights[self._bulb_map[bid]] = {'info': scanned}
               found_names.append(self._bulb_map[bid])
         else:
           for i, id in enumerate(self._bulb_map):
             print('Found fake bulb: %s' % (self._bulb_map[id],))
-            self._lights[self._bulb_map[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
+            new_lights[self._bulb_map[id]] = {'info': {'ipaddr': '10.0.0.%d' % i}}
             found_names.append(self._bulb_map[id])
 
         # Clear out any bulbs that went missing
         for name in old_names:
           if name not in found_names:
             print('Removing missing light: ', name)
-            del self._lights[name]
         for name in found_names:
           if name not in old_names:
             print('Adding new bulb: ', name)
 
-        for name, l in self._lights.items():
+        for name, l in new_lights.items():
           if not l['info']:
             print('Did not find expected bulb', name)
             sys.exit(1)
@@ -71,8 +71,9 @@ class Scanner(object):
           else:
             l['bulb'] = FakeBulb(name)
 
-        if len(self._lights) != len(self._bulb_map):
+        if len(new_lights) != len(self._bulb_map):
           print("Warning: didn't find all the lights")
+        self._lights = new_lights
 
       # Sleep, but keep checking for quit while we do.
       for i in range(0, self._period):
