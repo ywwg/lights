@@ -48,6 +48,7 @@ class Lights(object):
     if self._animation:
       self._animation.stop()
 
+    start_bulbs = self._get_bulbs_state()
     # In the case of "all", we have to specifically enumerate the bulbs because
     # the animator doesn't know about all the bulbs.
     dst_bulbs = preset.bulbs
@@ -61,7 +62,15 @@ class Lights(object):
         else:
           dst_bulbs[name] = preset.bulbs['all']
 
-    self._animation = anim.Animation(self, self._get_bulbs_state(), dst_bulbs,
+    # Remove dst bulbs that aren't active
+    remove_list = []
+    for bulb_name in dst_bulbs:
+      if bulb_name not in start_bulbs:
+        remove_list.append(bulb_name)
+    for bulb_name in remove_list:
+      del dst_bulbs[bulb_name]
+
+    self._animation = anim.Animation(self, start_bulbs, dst_bulbs,
                                     transition_time)
 
   def stop_animation(self):

@@ -43,7 +43,7 @@ class Animation(object):
       for bulb_name in self._end_bulbs:
         if bulb_name not in self._start_bulbs:
           print ('%s not in start bulb list: %s' % (bulb_name, self._start_bulbs))
-          continue
+          return
 
         src_val = self._start_bulbs[bulb_name]
         i_r, i_g, i_b, i_w = Animation._interp_vals(
